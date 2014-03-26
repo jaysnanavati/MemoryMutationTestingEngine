@@ -1,4 +1,4 @@
-#define GSTATS_PATH "gstats.stats"
+#define GSTATS_PATH "gstats.xml"
 
 void open_GStats();
 void close_GStats();

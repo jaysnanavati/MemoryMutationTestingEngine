@@ -1,37 +1,8 @@
-#include <libxml/parser.h>
-#include <libxml/xpath.h>
 #include <inttypes.h>
 #include <string.h>
+
 #include "valgrindEval.h"
-
-xmlDocPtr
-getdoc (char *docname) {
-  xmlDocPtr doc;
-  doc = xmlParseFile(docname);
-  return doc;
-}
-
-xmlXPathObjectPtr
-getnodeset (xmlDocPtr doc, xmlChar *xpath){
-  
-  xmlXPathContextPtr context;
-  xmlXPathObjectPtr result;
-  
-  context = xmlXPathNewContext(doc);
-  if (context == NULL) {
-    return NULL;
-  }
-  result = xmlXPathEvalExpression(xpath, context);
-  xmlXPathFreeContext(context);
-  if (result == NULL) {
-    return NULL;
-  }
-  if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
-    xmlXPathFreeObject(result);
-    return NULL;
-  }
-  return result;
-}
+#include "libxml_commons.h"
 
 void evaluate_error_nodes(ValgrindError*valgrindError,xmlDocPtr doc,int error_count,xmlChar *unique_value,int testing_framework){
   xmlNodeSetPtr nodeset;
