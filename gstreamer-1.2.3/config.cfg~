@@ -1,6 +1,0 @@
-sourceRootDir="/home/jay/Desktop/Mutate/gstreamer-1.2.3";
-source = ("plugins/elements/gsttee.c");
-outputDir="";
-testingFramework="libcheck";
-makeTestTarget="check";
-executablePath="tests";
