@@ -17,6 +17,7 @@
 #include <hashset.h>
 
 #include "valgrindEval.h"
+#include "gstats.h"
 
 //With regards to the HOMs and the calculation of the fitness function, with regards to memory based operations, can we have a new parameter
 //that we can optimize called: damage. As when looking at such mutations, although a mutant might be very fragile, but at the same time it might have
@@ -809,6 +810,29 @@ int main(int argc, char**argv) {
   char * cwd = getcwd(NULL, 0);
   int args_index=1;
   
+  if(argc==2){
+    open_GStats();
+    if(strcmp(argv[args_index],"--gstats-clear")==0){
+      if(clear_GStats()==0){
+	printf("gstat-status: File %s  deleted.\n", GSTATS_PATH);
+	exit(EXIT_SUCCESS);
+      }else{
+	fprintf(stderr, "gstat-status: Error deleting the file %s.\n", GSTATS_PATH);
+	exit(EXIT_FAILURE);
+      }
+    }else if(strcmp(argv[args_index],"--gstats-collect")==0){
+      //Show stats
+      char*args_cat[]={"cat",GSTATS_PATH,NULL};
+      startprogram(args_cat,NULL,0);
+      exit(EXIT_SUCCESS);
+    }else{
+      fprintf(stderr,"error: incorrect arguments\n");
+      exit(EXIT_FAILURE);
+    }
+    close_GStats();
+    
+  }
+  
   if(strcmp(argv[args_index],"--gstreamer")==0){
     args_index++;
     preset_project=1;
@@ -818,10 +842,11 @@ int main(int argc, char**argv) {
     verbose_mode=1;
     args_index++;
   }
+  
   user_config = processConfigFile(argv[args_index]);
   
   if(user_config==NULL){
-    printf("error: incorrect arguments\n");
+    fprintf(stderr,"error: incorrect arguments\n");
     exit(EXIT_FAILURE);
   }
   
