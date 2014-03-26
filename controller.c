@@ -312,19 +312,19 @@ int* get_non_trivial_FOM_stats(){
 }
 
 void printValgrindError(ValgrindError *valgrindError,int i){
-      if(valgrindError->location!=NULL){
-	fprintf(mutation_results, "\t*** Error(%d) ***\n",i+1);
-	fprintf(mutation_results, "\t> location: %s\n",valgrindError->location);
-      }
-      if(valgrindError->kind!=NULL){
-	fprintf(mutation_results, "\t> kind: %s\n",valgrindError->kind);
-      }
-      if(valgrindError->what!=NULL){
-	fprintf(mutation_results, "\t> what: %s\n",valgrindError->what);
-      }
-      if(valgrindError->auxwhat!=NULL){
-	fprintf(mutation_results, "\t> auxwhat: %s\n\n",valgrindError->auxwhat);
-      } 
+  if(valgrindError->location!=NULL){
+    fprintf(mutation_results, "\t*** Error(%d) ***\n",i+1);
+    fprintf(mutation_results, "\t> location: %s\n",valgrindError->location);
+  }
+  if(valgrindError->kind!=NULL){
+    fprintf(mutation_results, "\t> kind: %s\n",valgrindError->kind);
+  }
+  if(valgrindError->what!=NULL){
+    fprintf(mutation_results, "\t> what: %s\n",valgrindError->what);
+  }
+  if(valgrindError->auxwhat!=NULL){
+    fprintf(mutation_results, "\t> auxwhat: %s\n\n",valgrindError->auxwhat);
+  } 
 }
 
 void printValgrindResult(ValgrindResult*valgrindResult){
@@ -503,7 +503,7 @@ MResult* inject_mutations_CuTest(char* srcDir,char*target,char*makeDir,char* ori
     exit(EXIT_FAILURE);
   }
   
-  char filename_qfd[50] ;
+  char filename_qfd[1024] ;
   
   while ((dp = readdir(dfd)) != NULL)
   {
@@ -675,6 +675,134 @@ void generateSubsumingHOMs(char* srcDir,char*target,char*makeDir,Config *user_co
   }
 }
 
+void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**source,Config *user_config){
+  remove(mutation_results_path);
+  
+  temp_results =fopen(temp_results_path,"w+");
+  fwrite("0",1,1,temp_results);
+  fclose(temp_results);
+  
+  //Extract dir from target
+  char *chptr = strrchr(args_txl[4], '/');
+  long dif = chptr - args_txl[4];
+  
+  //Extract file name in order to rename mutants
+  char *original_file_Name =strndup(chptr+1,strlen(args_txl[4])-dif);
+  char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4])-(dif+3));
+  
+  char * args3 = malloc(snprintf(NULL, 0, "%s/%s/%s", "mutation_out", original_file_Name_dir,"txl_original.c") + 1);
+  sprintf(args3,"%s/%s/%s", "mutation_out", original_file_Name_dir,"txl_original.c");
+  args_txl[3]=args3;
+  
+  args_txl[7]=original_file_Name_dir;
+  
+  printf("\n");
+  
+  if(startprogram(args_txl,NULL,0)!=0){
+    return;
+  }
+  
+  printf("\n*-------------------------------------------------------------------------*\n* Mutating %s \n*-------------------------------------------------------------------------*\n\n",*source);
+  
+  char *mut_out_dir = malloc(snprintf(NULL, 0, "%s/%s", "mutation_out", original_file_Name_dir) + 1);
+  sprintf(mut_out_dir,"%s/%s", "mutation_out", original_file_Name_dir);
+  
+  make_logs_dir = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir , "make_logs.log") + 1);
+  sprintf(make_logs_dir,"%s/%s", mut_out_dir , "make_logs.log");
+  
+  //Start log file for recording mutation builds
+  make_logs = open(make_logs_dir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  close(make_logs);
+  
+  printf("\n--> Successfully generated mutations (FOMs) for: %s in %s, now performing injections <---\n\n",*source,mut_out_dir);
+  MResult* mResult = inject_mutations_CuTest(mut_out_dir,args_txl[4],copy_put,original_file_Name,user_config,args3,original_file_Name_dir);
+  
+  char *mut_out_dir_hom = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir, "HOM") + 1);
+  sprintf(mut_out_dir_hom,"%s/%s", mut_out_dir, "HOM");
+  
+  
+  if(mResult->fomResult->total_mutants>0){
+    //Generate HOMs from FOMs
+    //generateSubsumingHOMs(mut_out_dir_hom,args_txl[4],copy_put,user_config,args3,mResult);
+    //Re-inject the original source file into the project
+    copy_file(mResult->fomResult->original_source_file, args_txl[4]);
+    
+    printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n*-------------------------------------------------------------------------*\n* Total Mutants: %d (FOM) %d (HOM)\n* Mutants killed: %d (FOM) %d (HOM)\n*  > Non-trivial mutants: %d (FOM)\n*  > Dumb mutants: %d (FOM)\n* Mutants survived: %d (FOM) %d (HOM)\n*  > Live/Equivalent mutants: %d (FOM)\n*  > Failed Valgrind checks: %d (FOM)\n*  > Caused inconsistent program flow: %d (FOM)\n* Mutation score: %G (FOM) %G (HOM)\n* Test coverage increased by: %G%%\n*-------------------------------------------------------------------------*\n",*source,
+	   mResult->fomResult->total_mutants, 
+	   mResult->homResult->total_mutants, 
+	   mResult->fomResult->mutant_kill_count,
+	   mResult->homResult->mutant_kill_count,
+	   mResult->fomResult->non_trivial_FOM_count,
+	   mResult->fomResult->mutant_kill_count-mResult->fomResult->non_trivial_FOM_count,
+	   mResult->fomResult->survived_count,
+	   0,
+	   0,
+	   mResult->fomResult->killed_by_valgrind,
+	   mResult->homResult->total_mutants- mResult->homResult->mutant_kill_count,
+	   mResult->fomResult->total_mutants!=0?(double)mResult->fomResult->mutant_kill_count/(double)mResult->fomResult->total_mutants:0,
+	   mResult->homResult->total_mutants!=0?(double)mResult->homResult->mutant_kill_count/(double)mResult->homResult->total_mutants:0
+	   ,0.0
+    );
+    
+    //Show results
+    char*args_cat[]={"cat",mutation_results_path,NULL};
+    startprogram(args_cat,NULL,0);   
+  }else{
+    printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n* Total Mutants: 0 (FOM) 0 (HOM)\n*-------------------------------------------------------------------------*\n",*source);
+  }
+  
+  //Free resources
+  free(original_file_Name);
+  free(original_file_Name_dir);
+  free(s);
+  free(args3);
+  free(mut_out_dir);
+  free(mut_out_dir_hom);
+  free(mResult->fomResult);
+  free(mResult->homResult);
+  free(mResult);
+  free(args_txl[4]);
+  free(cwd);
+}
+
+void process_source_directory(char*srcDir,char * cwd,char*copy_put,char**args_txl,char**source,Config *user_config){
+  struct dirent *dp;
+  DIR *dfd;
+  
+  if ((dfd = opendir(srcDir)) == NULL)
+  {
+    fprintf(stderr, "Can't open %s\n", srcDir);
+    exit(EXIT_FAILURE);
+  }
+  
+  char filename_qfd[1024] ;
+  
+  while ((dp = readdir(dfd)) != NULL)
+  {
+    struct stat stbuf ;
+    sprintf( filename_qfd , "%s/%s",srcDir,dp->d_name) ;
+    if( stat(filename_qfd,&stbuf ) == -1 )
+    {
+      printf("Unable to stat file: %s\n",filename_qfd) ;
+      continue ;
+    }
+    
+    if ( ( stbuf.st_mode & S_IFMT ) == S_IFDIR )
+    {
+      //Recurse
+      char fullpath[1024];
+      snprintf(fullpath, sizeof(fullpath), "%s/%s", srcDir, dp->d_name);
+      process_source_directory(fullpath,cwd,copy_put,args_txl,source,user_config);
+      
+    }else{
+      char *dot = strrchr(dp->d_name, '.');
+      if (dot && !strcmp(dot, ".c")){
+	process_source_file(srcDir,cwd,copy_put,args_txl,source,user_config);
+      }
+    }
+  }
+}
+
 int main(int argc, char**argv) {
   
   Config *user_config;
@@ -766,99 +894,34 @@ int main(int argc, char**argv) {
     setenv("IS_MUTATE","true",1);
     
     int sc;
+    struct stat s;
     
-    for(sc=0;sc < user_config->numberOfSource;sc++){	
-      remove(mutation_results_path);
+    for(sc=0;sc < user_config->numberOfSource;sc++){
+      //get local path
+      char *path = malloc(sizeof(char)*(snprintf(NULL, 0, "%s/%s", copy_put, *source) + 1));
+      sprintf(path, "%s/%s", copy_put, *source);
+      args_txl[4]=path;
       
-      temp_results =fopen(temp_results_path,"w+");
-      fwrite("0",1,1,temp_results);
-      fclose(temp_results);
-      
-      char * s = malloc(snprintf(NULL, 0, "%s%s", copy_put, "/") + 1);
-      sprintf(s, "%s%s",copy_put , "/");
-      args_txl[4]=malloc(sizeof(char)*(snprintf(NULL, 0, "%s%s", s, *source) + 1));
-      sprintf(args_txl[4], "%s%s", s, *source);
-      
-      //Extract dir from target
-      char *chptr = strrchr(args_txl[4], '/');
-      long dif = chptr - args_txl[4];
-      
-      //Extract file name in order to rename mutants
-      char *original_file_Name =strndup(chptr+1,strlen(args_txl[4])-dif);
-      char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4])-(dif+3));
-      
-      char * args3 = malloc(snprintf(NULL, 0, "%s/%s/%s", "mutation_out", original_file_Name_dir,"txl_original.c") + 1);
-      sprintf(args3,"%s/%s/%s", "mutation_out", original_file_Name_dir,"txl_original.c");
-      args_txl[3]=args3;
-      
-      args_txl[7]=original_file_Name_dir;
-      
-      printf("\n");
-      
-      if(startprogram(args_txl,NULL,0)!=0){
-	continue;
+      //Process the path depending on whether it is a direcotry or a file
+      if( stat(path,&s) == 0 )
+      {
+	if( s.st_mode & S_IFDIR )
+	{
+	  //it's a directory
+	  process_source_directory(path,cwd,copy_put,args_txl,source,user_config);
+	}
+	else if( s.st_mode & S_IFREG )
+	{
+	  //it's a file
+	  process_source_file(path,cwd,copy_put,args_txl,source,user_config);
+	}
       }
-      
-      printf("\n*-------------------------------------------------------------------------*\n* Mutating %s \n*-------------------------------------------------------------------------*\n\n",*source);
-      
-      char *mut_out_dir = malloc(snprintf(NULL, 0, "%s/%s", "mutation_out", original_file_Name_dir) + 1);
-      sprintf(mut_out_dir,"%s/%s", "mutation_out", original_file_Name_dir);
-      
-      make_logs_dir = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir , "make_logs.log") + 1);
-      sprintf(make_logs_dir,"%s/%s", mut_out_dir , "make_logs.log");
-      
-      //Start log file for recording mutation builds
-      make_logs = open(make_logs_dir, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-      close(make_logs);
-      
-      printf("\n--> Successfully generated mutations (FOMs) for: %s in %s, now performing injections <---\n\n",*source,mut_out_dir);
-      MResult* mResult = inject_mutations_CuTest(mut_out_dir,args_txl[4],copy_put,original_file_Name,user_config,args3,original_file_Name_dir);
-      
-      char *mut_out_dir_hom = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir, "HOM") + 1);
-      sprintf(mut_out_dir_hom,"%s/%s", mut_out_dir, "HOM");
-      
-      
-      if(mResult->fomResult->total_mutants>0){
-	//Generate HOMs from FOMs
-	//generateSubsumingHOMs(mut_out_dir_hom,args_txl[4],copy_put,user_config,args3,mResult);
-	//Re-inject the original source file into the project
-	copy_file(mResult->fomResult->original_source_file, args_txl[4]);
-	
-	printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n*-------------------------------------------------------------------------*\n* Total Mutants: %d (FOM) %d (HOM)\n* Mutants killed: %d (FOM) %d (HOM)\n*  > Non-trivial mutants: %d (FOM)\n*  > Dumb mutants: %d (FOM)\n* Mutants survived: %d (FOM) %d (HOM)\n*  > Live/Equivalent mutants: %d (FOM)\n*  > Failed Valgrind checks: %d (FOM)\n*  > Caused inconsistent program flow: %d (FOM)\n* Mutation score: %G (FOM) %G (HOM)\n* Test coverage increased by: %G%%\n*-------------------------------------------------------------------------*\n",*source,
-	       mResult->fomResult->total_mutants, 
-	mResult->homResult->total_mutants, 
-	mResult->fomResult->mutant_kill_count,
-	mResult->homResult->mutant_kill_count,
-	mResult->fomResult->non_trivial_FOM_count,
-	mResult->fomResult->mutant_kill_count-mResult->fomResult->non_trivial_FOM_count,
-	mResult->fomResult->survived_count,
-	0,
-	0,
-	mResult->fomResult->killed_by_valgrind,
-	mResult->homResult->total_mutants- mResult->homResult->mutant_kill_count,
-	mResult->fomResult->total_mutants!=0?(double)mResult->fomResult->mutant_kill_count/(double)mResult->fomResult->total_mutants:0,
-	       mResult->homResult->total_mutants!=0?(double)mResult->homResult->mutant_kill_count/(double)mResult->homResult->total_mutants:0
-	       ,0.0
-	);
-	
-	//Show results
-	char*args_cat[]={"cat",mutation_results_path,NULL};
-	startprogram(args_cat,NULL,0);   
-      }else{
-	printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n* Total Mutants: 0 (FOM) 0 (HOM)\n*-------------------------------------------------------------------------*\n",*source);
+      else
+      {
+	//error
+	printf("error: parsing source files\n");
+	exit(EXIT_FAILURE);
       }
-      
-      free(cwd);
-      free(original_file_Name);
-      free(original_file_Name_dir);
-      free(s);
-      free(args_txl[4]);
-      free(args3);
-      free(mut_out_dir);
-      free(mut_out_dir_hom);
-      free(mResult->fomResult);
-      free(mResult->homResult);
-      free(mResult);
       source++;
     }
     
