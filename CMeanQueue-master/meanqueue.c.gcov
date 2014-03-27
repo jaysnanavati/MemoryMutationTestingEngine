@@ -1,0 +1,35 @@
+        -:    0:Source:meanqueue.c
+        -:    0:Programs:3
+        -:    1:#include <stdio.h>
+        -:    2:#include <stdlib.h>
+        -:    3:#include <strings.h>
+        -:    4:#include <string.h>
+        -:    5:#include <assert.h>
+        -:    6:#include "meanqueue.h"
+        -:    7:
+        4:    8:void * meanqueue_new (const int size) {
+        -:    9:    meanqueue_t * qu;
+        4:   10:    qu = calloc (1, sizeof (meanqueue_t));
+        4:   11:    qu->vals = calloc (size, sizeof (int));
+        4:   12:    qu->size = size;
+        4:   13:    return qu;
+        -:   14:}
+        -:   15:
+        4:   16:void meanqueue_free (meanqueue_t * qu) {
+        4:   17:    free (qu);
+        4:   18:}
+        -:   19:
+       12:   20:void meanqueue_offer (meanqueue_t * qu, const int val) {
+       12:   21:    qu->valSum += val;
+       12:   22:    qu->valSum -= qu->vals[qu->idxCur];
+       12:   23:    qu->vals[qu->idxCur] = val;
+       12:   24:    qu->idxCur++;
+       12:   25:    qu->mean = (float) qu->valSum / qu->size;
+       12:   26:    if (qu->idxCur >= qu->size)
+        2:   27:        qu->idxCur = 0;
+       12:   28:}
+        -:   29:
+        4:   30:float meanqueue_get_value (meanqueue_t * qu) {
+        4:   31:    return qu->mean;
+        -:   32:}
+        -:   33:

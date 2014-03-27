@@ -12,8 +12,8 @@
   <line>Command: CMeanQueue-master/tests</line>
 </preamble>
 
-<pid>14070</pid>
-<ppid>13888</ppid>
+<pid>19144</pid>
+<ppid>18962</ppid>
 <tool>memcheck</tool>
 
 <args>
@@ -33,7 +33,7 @@
 
 <status>
   <state>RUNNING</state>
-  <time>00:00:00:00.056 </time>
+  <time>00:00:00:00.054 </time>
 </status>
 
 <error>
@@ -367,7 +367,7 @@
 
 <status>
   <state>FINISHED</state>
-  <time>00:00:00:00.642 </time>
+  <time>00:00:00:00.640 </time>
 </status>
 
 <error>

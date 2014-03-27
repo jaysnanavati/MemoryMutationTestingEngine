@@ -1,0 +1,38 @@
+        -:    0:Source:main.c
+        -:    0:Programs:3
+        -:    1:
+        -:    2:
+        -:    3:/* This is auto-generated code. Edit at your own peril. */
+        -:    4:#include <stdio.h>
+        -:    5:#include "CuTest.h"
+        -:    6:
+        -:    7:
+        -:    8:extern void Testmeanqueue_init_is_zero(CuTest*);
+        -:    9:extern void Testmeanqueue_offer_populates_correct_mean(CuTest*);
+        -:   10:extern void Testmeanqueue_offer_populates_correct_mean2(CuTest*);
+        -:   11:extern void Testmeanqueue_offer_circles_around_array_size(CuTest*);
+        -:   12:
+        -:   13:
+        1:   14:void RunAllTests(void) 
+        -:   15:{
+        1:   16:    CuString *output = CuStringNew();
+        1:   17:    CuSuite* suite = CuSuiteNew();
+        -:   18:
+        -:   19:
+        1:   20:    SUITE_ADD_TEST(suite, Testmeanqueue_init_is_zero);
+        1:   21:    SUITE_ADD_TEST(suite, Testmeanqueue_offer_populates_correct_mean);
+        1:   22:    SUITE_ADD_TEST(suite, Testmeanqueue_offer_populates_correct_mean2);
+        1:   23:    SUITE_ADD_TEST(suite, Testmeanqueue_offer_circles_around_array_size);
+        -:   24:
+        1:   25:    CuSuiteRun(suite);
+        1:   26:    CuSuiteSummary(suite, output);
+        1:   27:    CuSuiteDetails(suite, output);
+        1:   28:    printf("%s\n", output->buffer);
+        1:   29:}
+        -:   30:
+        1:   31:int main()
+        -:   32:{
+        1:   33:    RunAllTests();
+        1:   34:    return 0;
+        -:   35:}
+        -:   36:

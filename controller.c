@@ -74,6 +74,7 @@ typedef struct{
   int total_mutants;
   int total_tests;
   int killed_by_valgrind;
+  int total_valgrind_errors;
 } FOMResult;
 
 
@@ -471,6 +472,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     if(valgrindResult!=NULL){
       //Print results to the console
       mResult->fomResult->killed_by_valgrind++;
+       mResult->fomResult->total_valgrind_errors+=valgrindResult->valgrind_error_count;
       printValgrindResult(mutation_code,valgrindResult);
     }else{
       //Update gstats to record the survived valgrind test
@@ -524,6 +526,7 @@ MResult* inject_mutations_CuTest(char* srcDir,char*target,char*makeDir,char* ori
   mResult->fomResult->survived=malloc(non_trivial_FOM_buffer*sizeof(Mutant));
   mResult->fomResult->killed_by_valgrind=0;
   mResult->fomResult->survived_count=0;
+  mResult->fomResult->total_valgrind_errors=0;
   mResult->homResult->mutant_kill_count=0;
   mResult->homResult->total_mutants=0;
   
@@ -793,6 +796,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     //Update gstats with the aggregated resuts of this run
     open_GStats();
     create_update_aggr_results("total_tests_run",get_gstat_value_aggr_results("total_tests_run")+mResult->fomResult->total_tests);
+    create_update_aggr_results("total_valgrind_errors",get_gstat_value_aggr_results("total_valgrind_errors")+mResult->fomResult->total_valgrind_errors);
     
     create_update_aggr_results("total_mutants",get_gstat_value_aggr_results("total_mutants")+mResult->fomResult->total_mutants);
     create_update_aggr_results("mutant_kill_count",get_gstat_value_aggr_results("mutant_kill_count")+mResult->fomResult->mutant_kill_count);
@@ -800,6 +804,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     create_update_aggr_results("dumb_count",get_gstat_value_aggr_results("dumb_count")+mResult->fomResult->mutant_kill_count-mResult->fomResult->non_trivial_FOM_count);
     create_update_aggr_results("survived_count",get_gstat_value_aggr_results("survived_count")+mResult->fomResult->survived_count);
     create_update_aggr_results("killed_by_valgrind_count",get_gstat_value_aggr_results("killed_by_valgrind_count")+mResult->fomResult->killed_by_valgrind);
+    flush_GStats();
     generate_derived_stats();
     flush_GStats();
     close_GStats();

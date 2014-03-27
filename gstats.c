@@ -19,8 +19,8 @@ int survived_count=0;
 int killed_by_valgrind_count=0;
 int total_tests_run=0;
 int total_infection_count=0;
+int total_valgrind_errors=0;
 
-xmlNodePtr aggregate_node=NULL;
 
 int clear_GStats(){
   close_GStats();
@@ -37,7 +37,7 @@ void open_GStats(){
   if(doc ==NULL){
     doc = xmlNewDoc(BAD_CAST "1.0");
     xmlDocSetRootElement(doc,xmlNewNode(NULL,(xmlChar*) "gstats"));
-    aggregate_node = xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
+    xmlNodePtr aggregate_node = xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
     
     //Extract aggregate stats from previous runs
     char *tic = (char*)xmlGetProp(aggregate_node, (xmlChar*)"total_infection_count");
@@ -120,12 +120,13 @@ int get_gstat_value_mutation(char*mut_code,char*key){
 }
 
 int get_gstat_value_aggr_results(char*key){
-  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
-  while(!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
-    aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
-  }
+ 
+  xmlNodePtr aggregate_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+    while(xmlStrcmp(aggregate_node->name, (const xmlChar *)"aggregate_stats")!=0){
+      aggregate_node = xmlNextElementSibling(aggregate_node);
+    }
   
-  xmlChar* val =xmlGetProp(aggregate_stats_node,(xmlChar*)key);
+  xmlChar* val =xmlGetProp(aggregate_node,(xmlChar*)key);
   if(val==NULL){
     return 0;
   }else{
@@ -153,16 +154,19 @@ void create_update_aggr_results(char*key,int value){
     killed_by_valgrind_count=value;
   }else if(strcmp(key,"total_infection_count")==0){
     total_infection_count=value;
+  }else if(strcmp(key,"total_valgrind_errors")==0){
+    total_valgrind_errors=value;
   }
   
-  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
-  while(!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
-    aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
-  }
+  xmlNodePtr aggregate_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+    while(xmlStrcmp(aggregate_node->name, (const xmlChar *)"aggregate_stats")!=0){
+      aggregate_node = xmlNextElementSibling(aggregate_node);
+    }
+  
   
   xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
   
-  xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
+  xmlSetProp(aggregate_node,(xmlChar*)key,char_value);
   free(char_value);
 }
 
@@ -217,13 +221,23 @@ void generate_derived_stats(){
 	free(val);
       }
       
-      //Valgrind_immunity: as a ratio of all other mutants, how many times was it able to infect the programs run
-      char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
-      if(infection_count!=NULL){
-	int ic = atoi(infection_count);
-	char*val = double_to_char_heap((double)ic/(double)total_infection_count);
-	xmlSetProp(mutation_operator,(xmlChar*)"infectiveness",BAD_CAST val);
-	xmlFree(infection_count);
+      //Valgrind_immunity: how many times was it detected by valgrind in comparison to other mutants
+      char* valgrind_survive_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"survived_valgrind");
+      if(valgrind_survive_count!=NULL){
+	int sv = atoi(valgrind_survive_count);
+	char*val = double_to_char_heap((double)sv/(double)(survived_count-killed_by_valgrind_count));
+	xmlSetProp(mutation_operator,(xmlChar*)"valgrind_immunity",BAD_CAST val);
+	xmlFree(valgrind_survive_count);
+	free(val);
+      }
+      
+      //Memory_damage: number of valgrind errors it generats vs others
+      char* valgrind_e_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"valgrind_errors_count");
+      if(valgrind_e_count!=NULL){
+	int vec = atoi(valgrind_e_count);
+	char*val = double_to_char_heap((double)vec/(double)total_valgrind_errors);
+	xmlSetProp(mutation_operator,(xmlChar*)"memory_damage",BAD_CAST val);
+	xmlFree(valgrind_e_count);
 	free(val);
       }
     }

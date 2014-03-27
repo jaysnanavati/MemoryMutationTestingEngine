@@ -1,0 +1,62 @@
+
+**** Mutant: REC2NO0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2M0.c ****
+status: (killed)
+description: (1) of (4) tests failed:
+1) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+
+**** Mutant: FPIBO_20.c ****
+status: (survived!!)
+Valgrind errors: 4
+
+**** Mutant: RMFS_21.c ****
+status: (survived!!)
+
+**** Mutant: REC2M1.c ****
+status: (killed)
+description: (1) of (4) tests failed:
+1) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+**** Mutant: REC2NO1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2N0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2N1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: FPDBO_21.c ****
+status: (survived!!)
+Valgrind errors: 4
+
+**** Mutant: FPDBO_20.c ****
+status: (survived!!)
+Valgrind errors: 4
+
+**** Mutant: REC2A0.c ****
+status: (killed)
+description: (4) of (4) tests failed:
+1) Testmeanqueue_init_is_zero: test_meanqueue.c:20: assert failed
+2) Testmeanqueue_offer_populates_correct_mean: test_meanqueue.c:34: assert failed
+3) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+4) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+**** Mutant: REC2A1.c ****
+status: (killed)
+description: (2) of (4) tests failed:
+1) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+2) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+**** Mutant: RMFS_20.c ****
+status: (survived!!)
+
+**** Mutant: FPIBO_21.c ****
+status: (killed)
+description: mutation caused a runtime error
