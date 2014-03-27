@@ -4,7 +4,7 @@
 #include "gstats.h"
 #include "libxml_commons.h"
 
-#define MUT_QUERY_PREFIX "//mutation_operator[code='"
+#define MUT_QUERY_PREFIX "//mutation_operator[text()='"
 #define MUT_QUERY_SUFFIX "']"
 
 FILE* gstats;

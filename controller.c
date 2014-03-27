@@ -378,7 +378,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   
   //Update gstats to record mutant generation
   create_update_gstat(mutation_code,"infection_count",get_gstat_value(mutation_code,"infection_count")+1);
-  flush_GStats();
+  
   //Get mutants killed by tests before new evaluation
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
   
@@ -386,12 +386,17 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   int make_result = runMake(makeDir,str,user_config->makeTestTarget,mResult);
   if(make_result==2){
     mResult->fomResult->mutant_kill_count++;
+    //Update gstats to record mutant was a dumb mutant
+    create_update_gstat(mutation_code,"dumb",get_gstat_value(mutation_code,"dumb")+1);
   }
   
   //Get mutants killed by tests after evaluation
   int *stats = get_non_trivial_FOM_stats();
   
   if(stats[0]-prev_killed_by_tests==1){
+    //Update gstats to record mutant was killed
+    create_update_gstat(mutation_code,"killed_by_tests",get_gstat_value(mutation_code,"killed_by_tests")+1);
+    
     mResult->fomResult->mutant_kill_count++;
     
     if(stats[0] >non_trivial_FOM_buffer){
@@ -401,9 +406,18 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     int NTFC = mResult->fomResult->non_trivial_FOM_count;
     
     if(stats[1]>0 && stats[1]<stats[2]){
+      //Was a non_trivial_mutant ie: only a subset of the tests killed it
+      
+      //Update gstats to record mutant was a  non_trivial_mutant
+      create_update_gstat(mutation_code,"non_trivial",get_gstat_value(mutation_code,"non_triviald")+1);
+      
       non_trivial_FOMS_ptr[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
       strncpy(non_trivial_FOMS_ptr[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
       non_trivial_FOMS_ptr[NTFC].fragility=((double)stats[1]/(double)stats[2]);
+      
+      //Update gstats to record the number of tests that killed the mutant
+      create_update_gstat(mutation_code,"killed_by_test_count",get_gstat_value(mutation_code,"killed_by_test_count")+stats[1]);
+      
       non_trivial_FOMS_ptr[NTFC].killed_by_tests = calloc(sizeof(int),stats[1]);
       non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];
       memcpy(non_trivial_FOMS_ptr[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
@@ -411,6 +425,9 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
 
     }
   }else if(make_result!=2){
+    //Update gstats to record the mutant survived
+     create_update_gstat(mutation_code,"survived_tests_count",get_gstat_value(mutation_code,"survived_tests_count")+1);
+      
     int SMC = mResult->fomResult->survived_count;
     if(SMC>non_trivial_FOM_buffer){
       mResult->fomResult->survived = realloc(mResult->fomResult->survived,(non_trivial_FOM_buffer*=2)*sizeof(Mutant));
@@ -445,15 +462,15 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     if(valgrindResult!=NULL){
       //Print results to the console
+      mResult->fomResult->killed_by_valgrind++;
       printValgrindResult(valgrindResult);
+    }else{
+      //Update gstats to record the survived valgrind test
+      create_update_gstat(mutation_code,"survived_valgrind",get_gstat_value(mutation_code,"survived_valgrind")+1);
     }
     //Store results in the Mutant
     survived_ptr[SMC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
     strncpy(survived_ptr[SMC].mutant_source_file,filename_qfd,strlen(filename_qfd));
-    
-    if(valgrindResult!=NULL){
-      mResult->fomResult->killed_by_valgrind++;
-    }
     survived_ptr[SMC].valgrindResult=valgrindResult;
     
     mResult->fomResult->survived_count++;
@@ -477,6 +494,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     startprogram(args_diff,mutation_results_path,1);
     free(args_diff);
   }
+  flush_GStats();
+  close_GStats();
 }
 
 MResult* inject_mutations_CuTest(char* srcDir,char*target,char*makeDir,char* original_file_Name,Config *user_config,char* txl_original,char*original_file_Name_dir){
