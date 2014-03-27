@@ -1,2 +1,4 @@
 <?xml version="1.0"?>
-<gstats/>
+<gstats>
+  <mutation_operator infection_count="1">REC2NO0</mutation_operator>
+</gstats>

@@ -378,7 +378,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   
   //Update gstats to record mutant generation
   create_update_gstat(mutation_code,"infection_count",get_gstat_value(mutation_code,"infection_count")+1);
-  
+  flush_GStats();
   //Get mutants killed by tests before new evaluation
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
   

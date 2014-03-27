@@ -7,14 +7,14 @@
 
 void * meanqueue_new (const int size) {
     meanqueue_t * qu;
-    qu = -1;
+    qu = calloc (1, sizeof (meanqueue_t));
     qu->vals = calloc (size, sizeof (int));
     qu->size = size;
     return qu;
 }
 
 void meanqueue_free (meanqueue_t * qu) {
-    free (qu -> vals);
+    free ((qu -> vals) - 1);
     free (qu);
 }
 

@@ -64,22 +64,25 @@ xmlNodePtr find_mutation_by_code(char*mut_code){
   xmlChar *xpath = (xmlChar*) xPath_query;
   //Execute
   result = getnodeset (doc, xpath);
-  nodeset = result->nodesetval;
-  
-  //Check if one or none entry exists
-  if(nodeset->nodeNr==1){
-    return nodeset->nodeTab[0];
-  }else if(nodeset->nodeNr==0){
+  if(result==NULL){
     return NULL;
   }else{
-    //We should never get here, this is a malformed gstats file
-    fprintf(stderr,"error: malformed gstats file \n");
-    exit(EXIT_FAILURE);
+    nodeset = result->nodesetval;
+    if(nodeset->nodeNr==1){
+      return nodeset->nodeTab[0];
+    }else{
+      //We should never get here, this is a malformed gstats file
+      fprintf(stderr,"error: malformed gstats file \n");
+      exit(EXIT_FAILURE);
+    }
   }
 }
 
 int get_gstat_value(char*mut_code,char*key){
   xmlNodePtr mutation = find_mutation_by_code(mut_code);
+  if(mutation==NULL){
+    return 0;
+  }
   xmlChar* val =xmlGetProp(mutation,(xmlChar*)key);
   if(val==NULL){
     return 0;
@@ -95,19 +98,19 @@ void create_update_gstat(char*mut_code,char*key,int value){
   xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
   if(mutation==NULL){
     //Create a new mutation_operator record
-    xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"mutation_operator",(xmlChar*)mut_code);
+    mutation =xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"mutation_operator",(xmlChar*)mut_code);
+  }
+  
+  //Get attribute with key=key
+  xmlAttrPtr attr= xmlHasProp(mutation, (xmlChar*)key);
+  if(attr==NULL){
+    //Create attribute
+    xmlSetProp(mutation,(xmlChar*)key,char_value);
   }else{
-    //Get attribute with key=key
-    xmlAttrPtr attr= xmlHasProp(mutation, (xmlChar*)key);
-    if(attr==NULL){
-      //Create attribute
-      xmlSetProp(mutation,(xmlChar*)key,char_value);
-    }else{
-      //Remove the child
-      xmlUnsetProp(mutation, (xmlChar*)key);
-      //Set with new value
-      xmlSetProp(mutation,(xmlChar*)key,char_value);
-    }
+    //Remove the child
+    xmlUnsetProp(mutation, (xmlChar*)key);
+    //Set with new value
+    xmlSetProp(mutation,(xmlChar*)key,char_value);
   }
   free(char_value);
 }

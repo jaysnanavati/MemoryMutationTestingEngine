@@ -53,8 +53,8 @@
         1:   51:    meanqueue_offer(qu, 3);
         1:   52:    CuAssertTrue(tc, 3 == (int) meanqueue_get_value(qu));
         -:   53:
-    #####:   54:    meanqueue_free(qu);
-    #####:   55:}
+        1:   54:    meanqueue_free(qu);
+        1:   55:}
         -:   56:
         1:   57:void Testmeanqueue_offer_circles_around_array_size(
         -:   58:    CuTest * tc
