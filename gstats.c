@@ -90,7 +90,7 @@ int get_gstat_value(char*mut_code,char*key){
   }
 }
 
-void create_update_GStats(char*mut_code,char*key,int value){
+void create_update_gstat(char*mut_code,char*key,int value){
   xmlNodePtr mutation = find_mutation_by_code(mut_code);
   xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
   if(mutation==NULL){
