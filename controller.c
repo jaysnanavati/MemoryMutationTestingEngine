@@ -391,6 +391,11 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];
       memcpy(non_trivial_FOMS_ptr[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
       mResult->fomResult->non_trivial_FOM_count++;
+      
+      //Update gstats
+      open_GStats();
+      create_update_GStats(NULL,NULL,NULL);
+      close_GStats();
     }
   }else if(make_result!=2){
     int SMC = mResult->fomResult->survived_count;
@@ -825,12 +830,8 @@ int main(int argc, char**argv) {
       char*args_cat[]={"cat",GSTATS_PATH,NULL};
       startprogram(args_cat,NULL,0);
       exit(EXIT_SUCCESS);
-    }else{
-      fprintf(stderr,"error: incorrect arguments\n");
-      exit(EXIT_FAILURE);
     }
     close_GStats();
-    
   }
   
   if(strcmp(argv[args_index],"--gstreamer")==0){

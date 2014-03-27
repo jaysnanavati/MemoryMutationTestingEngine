@@ -1,0 +1,9 @@
+
+**** Mutant: REC2NO0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2M0.c ****
+status: (killed)
+description: (1) of (4) tests failed:
+1) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed

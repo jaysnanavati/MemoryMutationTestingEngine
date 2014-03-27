@@ -5,8 +5,10 @@
 #include "libxml_commons.h"
 
 FILE* gstats;
+xmlDocPtr doc;
 
 int clear_GStats(){
+  close_GStats();
   if(remove(GSTATS_PATH)==0){
     return 0;
   }else{
@@ -16,29 +18,40 @@ int clear_GStats(){
 
 void open_GStats(){
   gstats = fopen(GSTATS_PATH, "ab+");
+  doc = getdoc(GSTATS_PATH);
+  if(doc ==NULL){
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    xmlDocSetRootElement(doc,xmlNewNode(NULL,(xmlChar*) "gstats"));
+    flush_GStats();
+  }
 }
 
 void close_GStats(){
-  fclose(gstats);
+  if(gstats!=NULL){
+    fclose(gstats);
+  }
+  if(doc!=NULL){
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+  }
+}
+
+void flush_GStats(){
+  if(xmlSaveFormatFileEnc(GSTATS_PATH,doc,NULL,1)==-1){
+    //We should never get here, this is a malformed gstats file
+    fprintf(stderr,"error: unable to create gstats.xml \n");
+    exit(EXIT_FAILURE);
+  }
 }
 
 int create_update_GStats(char*mut_code,char*key,char*value){
   //Check to see if an entry for the mut_code exists, else create and fill with children key,value
-  xmlDocPtr doc;
   xmlNodeSetPtr nodeset;
   xmlXPathObjectPtr result;
-  xmlNodePtr root_node;
-  doc = getdoc(GSTATS_PATH);
+  
   char *xPath_prefix = "//mutation_operator[code='";
   char *xPath_suffix = "']";
   char xPath_query[strlen(xPath_prefix)+strlen(mut_code)+strlen(xPath_suffix)+1];
-  
-  //Check if a file is empty, if it is, then create a new root element
-  root_node=xmlDocGetRootElement(doc);
-  if (!(root_node!=NULL && (!xmlStrcmp(root_node->name, (const xmlChar *)"gstats")))){
-    root_node=xmlNewNode(NULL,(xmlChar*) "gstats");
-    root_node=xmlDocSetRootElement(doc,root_node);
-  }
   
   //Create the XPath query to find the entry for the mutant with code = mut_code
   sprintf(xPath_query, "%s%s%s",xPath_prefix , mut_code,xPath_suffix);
