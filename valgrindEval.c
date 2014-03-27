@@ -33,7 +33,7 @@ void evaluate_error_nodes(ValgrindError*valgrindError,xmlDocPtr doc,int error_co
   nodeset = result->nodesetval;
   //Itterate through the <error><error> nodes that have the provided <unique></unique> value
   ValgrindError* current_error=valgrindError;
-  for (i=0; i < error_count; i++) {
+  for (i=0; i < nodeset->nodeNr; i++) {
     if(i>0){
       current_error = &valgrindError->siblings[i-1];
       current_error->siblings=NULL;

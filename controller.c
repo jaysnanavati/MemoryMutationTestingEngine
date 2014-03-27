@@ -360,19 +360,19 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   printf("--> Evaluating FOM: %s\n",str);
   
   //Extract the mutation code
-      char* mutation_code=NULL;
-      char *chptr = strrchr(str, '/');
-     
-      if(chptr==NULL){
-	 mutation_code=strndup(str,strlen(str)-2);
-      }else{
-	long dif = chptr - str;
-	mutation_code=strndup(chptr+1,(strlen(str)-dif)-2);
-      }
+  char* mutation_code=NULL;
+  char *chptr = strrchr(str, '/');
+  
+  if(chptr==NULL){
+    mutation_code=strndup(str,strlen(str)-2);
+  }else{
+    long dif = chptr - str;
+    mutation_code=strndup(chptr+1,(strlen(str)-dif)-2);
+  }
   
   //Start Updating gstats
   open_GStats();
-
+  
   //Open log file for recording mutation results
   mutation_results = fopen(mutation_results_path,"a+");
   fprintf(mutation_results, "\n**** Mutant: %s ****\n",str);
@@ -391,7 +391,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     //Update gstats to record mutant did not execute
     create_update_gstat_mutation(mutation_code,"no_execution",get_gstat_value_mutation(mutation_code,"no_execution")+1);
     
-     create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count"));
+    create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count"));
   }else{
     //Update gstats to record mutant generation
     create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count")+1);
@@ -403,9 +403,9 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   if(stats[0]-prev_killed_by_tests==1){
     //Update gstats to record mutant was killed
     create_update_gstat_mutation(mutation_code,"killed_by_tests",get_gstat_value_mutation(mutation_code,"killed_by_tests")+1);
-     //Update gstats to record the number of tests that killed the mutant
-      create_update_gstat_mutation(mutation_code,"killed_by_test_count",get_gstat_value_mutation(mutation_code,"killed_by_test_count")+stats[1]);
-      
+    //Update gstats to record the number of tests that killed the mutant
+    create_update_gstat_mutation(mutation_code,"killed_by_test_count",get_gstat_value_mutation(mutation_code,"killed_by_test_count")+stats[1]);
+    
     
     mResult->fomResult->mutant_kill_count++;
     
@@ -430,13 +430,13 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];
       memcpy(non_trivial_FOMS_ptr[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
       mResult->fomResult->non_trivial_FOM_count++;
-
+      
     }
-     mResult->fomResult->total_tests=stats[2];
+    mResult->fomResult->total_tests=stats[2];
   }else if(make_result!=2){
     //Update gstats to record the mutant survived
-     create_update_gstat_mutation(mutation_code,"survived_tests_count",get_gstat_value_mutation(mutation_code,"survived_tests_count")+1);
-      
+    create_update_gstat_mutation(mutation_code,"survived_tests_count",get_gstat_value_mutation(mutation_code,"survived_tests_count")+1);
+    
     int SMC = mResult->fomResult->survived_count;
     if(SMC>non_trivial_FOM_buffer){
       mResult->fomResult->survived = realloc(mResult->fomResult->survived,(non_trivial_FOM_buffer*=2)*sizeof(Mutant));
@@ -472,7 +472,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     if(valgrindResult!=NULL){
       //Print results to the console
       mResult->fomResult->killed_by_valgrind++;
-       mResult->fomResult->total_valgrind_errors+=valgrindResult->valgrind_error_count;
+      mResult->fomResult->total_valgrind_errors+=valgrindResult->valgrind_error_count;
       printValgrindResult(mutation_code,valgrindResult);
     }else{
       //Update gstats to record the survived valgrind test
@@ -817,20 +817,21 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   }
   
   //Free resources
-  free(original_file_Name);
-  free(original_file_Name_dir);
-  free(s);
-  free(args3);
-  free(mut_out_dir);
-  free(mut_out_dir_hom);
-  free(mResult->fomResult);
-  free(mResult->homResult);
-  free(mResult);
-  free(args_txl[4]);
-  free(cwd);
+  //free(original_file_Name);
+  //free(original_file_Name_dir);
+  //free(s);
+  //free(args3);
+  //free(mut_out_dir);
+  //free(mut_out_dir_hom);
+  //free(mResult->fomResult);
+  //free(mResult->homResult);
+  //free(mResult);
+  //free(args_txl[4]);
+  //free(cwd);
 }
 
 void process_source_directory(char*srcDir,char * cwd,char*copy_put,char**args_txl,char**source,Config *user_config){
+  
   struct dirent *dp;
   DIR *dfd;
   
@@ -854,15 +855,17 @@ void process_source_directory(char*srcDir,char * cwd,char*copy_put,char**args_tx
     
     if ( ( stbuf.st_mode & S_IFMT ) == S_IFDIR )
     {
-      //Recurse
-      char fullpath[1024];
-      snprintf(fullpath, sizeof(fullpath), "%s/%s", srcDir, dp->d_name);
-      process_source_directory(fullpath,cwd,copy_put,args_txl,source,user_config);
-      
+      continue;
+      // Skip directories
     }else{
       char *dot = strrchr(dp->d_name, '.');
       if (dot && !strcmp(dot, ".c")){
-	process_source_file(srcDir,cwd,copy_put,args_txl,source,user_config);
+	
+	char *file = malloc(snprintf(NULL, 0, "%s/%s", srcDir,dp->d_name ) + 1);
+	sprintf(file, "%s/%s", srcDir,dp->d_name);
+	args_txl[4]=file;
+	process_source_file(file,cwd,copy_put,args_txl,source,user_config);
+	free(file);
       }
     }
   }
@@ -940,8 +943,9 @@ int main(int argc, char**argv) {
       sprintf(cutest_source, "%s/%s",copy_put , user_config->CuTestLibSource);
       copy_file("CuTest/CuTest.forked.c",cutest_source);
       free(cutest_source);
-    }else if(user_config->testingFramework==2){
+    }else if(user_config->testingFramework==2 && user_config->CheckTestLibSource!=NULL){
       //Replace the Check library in the project with our modified library
+      
       char * check_source = malloc(snprintf(NULL, 0, "%s/%s", copy_put,user_config->CheckTestLibSource) + 1);
       sprintf(check_source, "%s/%s",copy_put , user_config->CheckTestLibSource);
       
@@ -985,9 +989,8 @@ int main(int argc, char**argv) {
       //get local path
       char *path = malloc(sizeof(char)*(snprintf(NULL, 0, "%s/%s", copy_put, *source) + 1));
       sprintf(path, "%s/%s", copy_put, *source);
-      args_txl[4]=path;
       
-      //Process the path depending on whether it is a direcotry or a file
+      //Check if the path is a directory or a file
       if( stat(path,&s) == 0 )
       {
 	if( s.st_mode & S_IFDIR )
@@ -1001,18 +1004,11 @@ int main(int argc, char**argv) {
 	  process_source_file(path,cwd,copy_put,args_txl,source,user_config);
 	}
       }
-      else
-      {
-	//error
-	printf("error: parsing source files\n");
-	exit(EXIT_FAILURE);
-      }
       source++;
     }
     
     //Remove the copy of the program under test we made earlier
     cleanUp(copy_put);
-    
     printf("\n");
   }
   return 0;

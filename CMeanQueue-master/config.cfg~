@@ -1,5 +1,0 @@
-sourceRootDir="/home/jay/Desktop/Mutate/CMeanQueue-master";
-source = ("meanqueue.c");
-outputDir="";
-testingFramework="cutest";
-CuTestLibSource="CuTest.c";
