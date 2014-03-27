@@ -4,4 +4,5 @@ void open_GStats();
 void close_GStats();
 void flush_GStats();
 int clear_GStats();
-int create_update_GStats(char*mut_code,char*key,char*value);
+void create_update_gstat(char*mut_code,char*key,int value);
+int get_gstat_value(char*mut_code,char*key);

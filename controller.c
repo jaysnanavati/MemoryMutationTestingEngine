@@ -355,12 +355,29 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   //Run make on the mutated project in order to build it
   printf("--> Evaluating FOM: %s\n",str);
   
+  //Extract the mutation code
+      char* mutation_code=NULL;
+      char *chptr = strrchr(str, '/');
+     
+      if(chptr==NULL){
+	 mutation_code=strndup(str,strlen(str)-2);
+      }else{
+	long dif = chptr - str;
+	mutation_code=strndup(chptr+1,(strlen(str)-dif)-2);
+      }
+  
+  //Start Updating gstats
+  open_GStats();
+
   //Open log file for recording mutation results
   mutation_results = fopen(mutation_results_path,"a+");
   fprintf(mutation_results, "\n**** Mutant: %s ****\n",str);
   fflush(mutation_results);
   fclose(mutation_results);
   mResult->fomResult->total_mutants++;
+  
+  //Update gstats to record mutant generation
+  create_update_gstat(mutation_code,"infection_count",get_gstat_value(mutation_code,"infection_count")+1);
   
   //Get mutants killed by tests before new evaluation
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
@@ -391,11 +408,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];
       memcpy(non_trivial_FOMS_ptr[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
       mResult->fomResult->non_trivial_FOM_count++;
-      
-      //Update gstats
-      open_GStats();
-      create_update_GStats(NULL,NULL,NULL);
-      close_GStats();
+
     }
   }else if(make_result!=2){
     int SMC = mResult->fomResult->survived_count;
