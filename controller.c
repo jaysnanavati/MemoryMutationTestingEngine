@@ -361,13 +361,13 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   
   //Extract the mutation code
   char* mutation_code=NULL;
-  char *chptr = strrchr(str, '/');
+  char *chptr = strrchr(str, '_');
   
   if(chptr==NULL){
     mutation_code=strndup(str,strlen(str)-2);
   }else{
     long dif = chptr - str;
-    mutation_code=strndup(chptr+1,(strlen(str)-dif)-2);
+    mutation_code=strndup(str,dif);
   }
   
   //Start Updating gstats
@@ -527,6 +527,7 @@ MResult* inject_mutations_CuTest(char* srcDir,char*target,char*makeDir,char* ori
   mResult->fomResult->killed_by_valgrind=0;
   mResult->fomResult->survived_count=0;
   mResult->fomResult->total_valgrind_errors=0;
+  mResult->fomResult->total_tests=0;
   mResult->homResult->mutant_kill_count=0;
   mResult->homResult->total_mutants=0;
   
@@ -1001,6 +1002,7 @@ int main(int argc, char**argv) {
 	else if( s.st_mode & S_IFREG )
 	{
 	  //it's a file
+	  args_txl[4]=path;
 	  process_source_file(path,cwd,copy_put,args_txl,source,user_config);
 	}
       }

@@ -49,7 +49,7 @@ rule mutateNULLAssignments defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [removeNullDec 0]
-		  [generateMutant "RMNA" 0]
+		  [generateMutant "RMNA_" 0]
 		  [prepareNextMutationOP 0]
 		  
 		  [removeNullStmt 1]
@@ -84,19 +84,19 @@ rule mutateCalloc defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [replace_calloc_W_malloc 5]
-		  [generateMutant "REC2M" 5]
+		  [generateMutant "REC2M_" 5]
 		  [prepareNextMutationOP 5]
 		  
 		  [replace_calloc_W_alloca 6]
-		  [generateMutant "REC2A" 6]
+		  [generateMutant "REC2A_" 6]
 		  [prepareNextMutationOP 6]
 		  
 		  [replace_calloc_W_NULL 7]
-		  [generateMutant "REC2N" 7]
+		  [generateMutant "REC2N_" 7]
 		  [prepareNextMutationOP 7]
 		  
 		  [replace_calloc_W_NO 8]
-		  [generateMutant "REC2NO" 8]
+		  [generateMutant "REC2NO_" 8]
 		  [prepareNextMutationOP 8]
 end rule
 
@@ -107,11 +107,11 @@ rule mutateAlloca defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [replace_alloca_W_NO 9]
-		  [generateMutant "REA2NO" 9]
+		  [generateMutant "REA2NO_" 9]
 		  [prepareNextMutationOP 9]
 		  
 		  [replace_alloca_W_NULL 10]
-		  [generateMutant "REA2N" 10]
+		  [generateMutant "REA2N_" 10]
 		  [prepareNextMutationOP 10]
 end rule
 
@@ -122,11 +122,11 @@ rule mutateRealloc defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [replace_realloc_W_NO 11]
-		  [generateMutant "RER2NO" 11]
+		  [generateMutant "RER2NO_" 11]
 		  [prepareNextMutationOP 11]
 		  
 		  [replace_realloc_W_NULL 12]
-		  [generateMutant "RER2N" 12]
+		  [generateMutant "RER2N_" 12]
 		  [prepareNextMutationOP 12]
 end rule
 
@@ -142,11 +142,11 @@ rule mutateMalloc defValMax [number]
 		  [prepareNextMutationOP 13]
 		  
 		  [replace_malloc_W_NO 14]
-		  [generateMutant "REM2NO" 14]
+		  [generateMutant "REM2NO_" 14]
 		  [prepareNextMutationOP 14]
 		  
 		  [replace_malloc_W_N 15]
-		  [generateMutant "REM2N" 15]
+		  [generateMutant "REM2N_" 15]
 		  [prepareNextMutationOP 15]
 		  
 end rule
