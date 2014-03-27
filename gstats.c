@@ -11,14 +11,16 @@ FILE* gstats;
 xmlDocPtr doc;
 
 //Store aggregate types in order to calculate derived results later
-int total_mutants;
-int mutant_kill_count;
-int non_trivial_count;
-int dumb_count;
-int survived_count;
-int killed_by_valgrind_count;
-int total_tests_run;
-int total_infection_count;
+int total_mutants=0;
+int mutant_kill_count=0;
+int non_trivial_count=0;
+int dumb_count=0;
+int survived_count=0;
+int killed_by_valgrind_count=0;
+int total_tests_run=0;
+int total_infection_count=0;
+
+xmlNodePtr aggregate_node=NULL;
 
 int clear_GStats(){
   close_GStats();
@@ -35,8 +37,14 @@ void open_GStats(){
   if(doc ==NULL){
     doc = xmlNewDoc(BAD_CAST "1.0");
     xmlDocSetRootElement(doc,xmlNewNode(NULL,(xmlChar*) "gstats"));
-    xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
+    aggregate_node = xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
     
+    //Extract aggregate stats from previous runs
+    char *tic = (char*)xmlGetProp(aggregate_node, (xmlChar*)"total_infection_count");
+    if(tic!=NULL){
+      total_infection_count = atoi(tic);
+      xmlFree(tic);
+    }
     flush_GStats();
   }
 }
@@ -143,6 +151,8 @@ void create_update_aggr_results(char*key,int value){
     survived_count=value;
   }else if(strcmp(key,"killed_by_valgrind_count")==0){
     killed_by_valgrind_count=value;
+  }else if(strcmp(key,"total_infection_count")==0){
+    total_infection_count=value;
   }
   
   xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
@@ -151,7 +161,7 @@ void create_update_aggr_results(char*key,int value){
   }
   
   xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
- 
+  
   xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
   free(char_value);
 }
@@ -163,9 +173,14 @@ void create_update_gstat_mutation(char*mut_code,char*key,int value){
     //Create a new mutation_operator record
     mutation =xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"mutation_operator",(xmlChar*)mut_code);
   }
-  
   xmlSetProp(mutation,(xmlChar*)key,char_value);
   free(char_value);
+  
+  //Update aggregate values
+  if(strcmp(key,"infection_count")==0 && value!=0){
+    total_infection_count++;
+    create_update_aggr_results("total_infection_count",total_infection_count);
+  }
 }
 
 void generate_derived_stats(){
@@ -193,16 +208,24 @@ void generate_derived_stats(){
 	free(val);
       }
       //Infectiveness: as a ratio of all other mutants, how many times was it able to infect the programs run
-       char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
+      char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
       if(infection_count!=NULL){
 	int ic = atoi(infection_count);
 	char*val = double_to_char_heap((double)ic/(double)total_infection_count);
-	xmlSetProp(mutation_operator,(xmlChar*)"Infectiveness",BAD_CAST val);
+	xmlSetProp(mutation_operator,(xmlChar*)"infectiveness",BAD_CAST val);
+	xmlFree(infection_count);
+	free(val);
+      }
+      
+      //Valgrind_immunity: as a ratio of all other mutants, how many times was it able to infect the programs run
+      char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
+      if(infection_count!=NULL){
+	int ic = atoi(infection_count);
+	char*val = double_to_char_heap((double)ic/(double)total_infection_count);
+	xmlSetProp(mutation_operator,(xmlChar*)"infectiveness",BAD_CAST val);
 	xmlFree(infection_count);
 	free(val);
       }
     }
   }
-  
-  
 }

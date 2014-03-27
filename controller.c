@@ -379,8 +379,6 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   fclose(mutation_results);
   mResult->fomResult->total_mutants++;
   
-  //Update gstats to record mutant generation
-  create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count")+1);
   
   //Get mutants killed by tests before new evaluation
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
@@ -391,6 +389,11 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     mResult->fomResult->mutant_kill_count++;
     //Update gstats to record mutant did not execute
     create_update_gstat_mutation(mutation_code,"no_execution",get_gstat_value_mutation(mutation_code,"no_execution")+1);
+    
+     create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count"));
+  }else{
+    //Update gstats to record mutant generation
+    create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count")+1);
   }
   
   //Get mutants killed by tests after evaluation
