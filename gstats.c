@@ -25,6 +25,7 @@ void open_GStats(){
   if(doc ==NULL){
     doc = xmlNewDoc(BAD_CAST "1.0");
     xmlDocSetRootElement(doc,xmlNewNode(NULL,(xmlChar*) "gstats"));
+    xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
     flush_GStats();
   }
 }
@@ -78,7 +79,7 @@ xmlNodePtr find_mutation_by_code(char*mut_code){
   }
 }
 
-int get_gstat_value(char*mut_code,char*key){
+int get_gstat_value_mutation(char*mut_code,char*key){
   xmlNodePtr mutation = find_mutation_by_code(mut_code);
   if(mutation==NULL){
     return 0;
@@ -93,7 +94,51 @@ int get_gstat_value(char*mut_code,char*key){
   }
 }
 
-void create_update_gstat(char*mut_code,char*key,int value){
+int get_gstat_value_aggr_results(char*key){
+    xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+  aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
+  
+  if (!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
+    //We should never get here, this is a malformed gstats file
+    fprintf(stderr,"error: malformed gstats file \n");
+    exit(EXIT_FAILURE);
+  }
+  xmlChar* val =xmlGetProp(aggregate_stats_node,(xmlChar*)key);
+  if(val==NULL){
+    return 0;
+  }else{
+    int i = atoi((char*)val);
+    free(val);
+    return i;
+  }
+}
+
+void create_update_aggr_results(char*key,int value){
+  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+  aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
+
+  xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
+  if (!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
+    //We should never get here, this is a malformed gstats file
+    fprintf(stderr,"error: malformed gstats file \n");
+    exit(EXIT_FAILURE);
+  }
+  
+  //Get attribute with key=key
+  xmlAttrPtr attr= xmlHasProp(aggregate_stats_node, (xmlChar*)key);
+  if(attr==NULL){
+    //Create attribute
+    xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
+  }else{
+    //Remove the child
+    xmlUnsetProp(aggregate_stats_node, (xmlChar*)key);
+    //Set with new value
+    xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
+  }
+  free(char_value);
+}
+
+void create_update_gstat_mutation(char*mut_code,char*key,int value){
   xmlNodePtr mutation = find_mutation_by_code(mut_code);
   xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
   if(mutation==NULL){
