@@ -10,6 +10,16 @@
 FILE* gstats;
 xmlDocPtr doc;
 
+//Store aggregate types in order to calculate derived results later
+int total_mutants;
+int mutant_kill_count;
+int non_trivial_count;
+int dumb_count;
+int survived_count;
+int killed_by_valgrind_count;
+int total_tests_run;
+int total_infection_count;
+
 int clear_GStats(){
   close_GStats();
   if(remove(GSTATS_PATH)==0){
@@ -26,6 +36,7 @@ void open_GStats(){
     doc = xmlNewDoc(BAD_CAST "1.0");
     xmlDocSetRootElement(doc,xmlNewNode(NULL,(xmlChar*) "gstats"));
     xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"aggregate_stats",(xmlChar*)"");
+    
     flush_GStats();
   }
 }
@@ -51,6 +62,12 @@ void flush_GStats(){
 char* int_to_char_heap(int i){
   char *c = malloc(snprintf(NULL, 0, "%d", i) + 1);
   sprintf(c, "%d", i);
+  return c;
+}
+
+char* double_to_char_heap(double d){
+  char *c = malloc(snprintf(NULL, 0, "%G", d) + 1);
+  sprintf(c, "%G", d);
   return c;
 }
 
@@ -95,14 +112,11 @@ int get_gstat_value_mutation(char*mut_code,char*key){
 }
 
 int get_gstat_value_aggr_results(char*key){
-    xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
-  aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
-  
-  if (!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
-    //We should never get here, this is a malformed gstats file
-    fprintf(stderr,"error: malformed gstats file \n");
-    exit(EXIT_FAILURE);
+  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+  while(!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
+    aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
   }
+  
   xmlChar* val =xmlGetProp(aggregate_stats_node,(xmlChar*)key);
   if(val==NULL){
     return 0;
@@ -114,27 +128,31 @@ int get_gstat_value_aggr_results(char*key){
 }
 
 void create_update_aggr_results(char*key,int value){
-  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
-  aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
-
-  xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
-  if (!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
-    //We should never get here, this is a malformed gstats file
-    fprintf(stderr,"error: malformed gstats file \n");
-    exit(EXIT_FAILURE);
+  
+  if(strcmp(key,"total_tests_run")==0){
+    total_tests_run=value;
+  }else if(strcmp(key,"total_mutants")==0){
+    total_mutants=value;
+  }else if(strcmp(key,"mutant_kill_count")==0){
+    mutant_kill_count=value;
+  }else if(strcmp(key,"non_trivial_count")==0){
+    non_trivial_count=value;
+  }else if(strcmp(key,"dumb_count")==0){
+    dumb_count=value;
+  }else if(strcmp(key,"survived_count")==0){
+    survived_count=value;
+  }else if(strcmp(key,"killed_by_valgrind_count")==0){
+    killed_by_valgrind_count=value;
   }
   
-  //Get attribute with key=key
-  xmlAttrPtr attr= xmlHasProp(aggregate_stats_node, (xmlChar*)key);
-  if(attr==NULL){
-    //Create attribute
-    xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
-  }else{
-    //Remove the child
-    xmlUnsetProp(aggregate_stats_node, (xmlChar*)key);
-    //Set with new value
-    xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
+  xmlNodePtr aggregate_stats_node = xmlDocGetRootElement(doc)->xmlChildrenNode;
+  while(!(!xmlStrcmp(aggregate_stats_node->name, (const xmlChar *)"aggregate_stats"))){
+    aggregate_stats_node = xmlNextElementSibling(aggregate_stats_node);
   }
+  
+  xmlChar* char_value = (xmlChar*)int_to_char_heap(value);
+ 
+  xmlSetProp(aggregate_stats_node,(xmlChar*)key,char_value);
   free(char_value);
 }
 
@@ -146,16 +164,45 @@ void create_update_gstat_mutation(char*mut_code,char*key,int value){
     mutation =xmlNewTextChild(xmlDocGetRootElement(doc),NULL,(xmlChar*)"mutation_operator",(xmlChar*)mut_code);
   }
   
-  //Get attribute with key=key
-  xmlAttrPtr attr= xmlHasProp(mutation, (xmlChar*)key);
-  if(attr==NULL){
-    //Create attribute
-    xmlSetProp(mutation,(xmlChar*)key,char_value);
-  }else{
-    //Remove the child
-    xmlUnsetProp(mutation, (xmlChar*)key);
-    //Set with new value
-    xmlSetProp(mutation,(xmlChar*)key,char_value);
-  }
+  xmlSetProp(mutation,(xmlChar*)key,char_value);
   free(char_value);
+}
+
+void generate_derived_stats(){
+  //For each mutation_operator entry generate derived results
+  xmlNodeSetPtr nodeset;
+  xmlXPathObjectPtr result; 
+  xmlChar *xPath_query= (xmlChar*)"//mutation_operator";
+  int i;
+  
+  //Execute
+  result = getnodeset (doc, xPath_query);
+  if(result==NULL){
+    return;
+  }else{
+    nodeset = result->nodesetval;
+    for (i=0; i < nodeset->nodeNr; i++) {
+      xmlNodePtr mutation_operator = nodeset->nodeTab[i];
+      //Fragilty:total number of tests that killed it vs total number of tests that were run
+      char* killed_by_test_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_by_test_count");
+      if(killed_by_test_count!=NULL){
+	int kbtc = atoi(killed_by_test_count);
+	char*val = double_to_char_heap((double)kbtc/(double)total_tests_run);
+	xmlSetProp(mutation_operator,(xmlChar*)"fragilty",BAD_CAST val);
+	xmlFree(killed_by_test_count);
+	free(val);
+      }
+      //Infectiveness: as a ratio of all other mutants, how many times was it able to infect the programs run
+       char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
+      if(infection_count!=NULL){
+	int ic = atoi(infection_count);
+	char*val = double_to_char_heap((double)ic/(double)total_infection_count);
+	xmlSetProp(mutation_operator,(xmlChar*)"Infectiveness",BAD_CAST val);
+	xmlFree(infection_count);
+	free(val);
+      }
+    }
+  }
+  
+  
 }

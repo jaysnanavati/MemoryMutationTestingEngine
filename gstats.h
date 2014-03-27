@@ -9,3 +9,5 @@ int get_gstat_value_mutation(char*mut_code,char*key);
 
 int get_gstat_value_aggr_results(char*key);
 void create_update_aggr_results(char*key,int value);
+
+void generate_derived_stats();

@@ -428,6 +428,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       mResult->fomResult->non_trivial_FOM_count++;
 
     }
+     mResult->fomResult->total_tests=stats[2];
   }else if(make_result!=2){
     //Update gstats to record the mutant survived
      create_update_gstat_mutation(mutation_code,"survived_tests_count",get_gstat_value_mutation(mutation_code,"survived_tests_count")+1);
@@ -788,12 +789,15 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     
     //Update gstats with the aggregated resuts of this run
     open_GStats();
+    create_update_aggr_results("total_tests_run",get_gstat_value_aggr_results("total_tests_run")+mResult->fomResult->total_tests);
+    
     create_update_aggr_results("total_mutants",get_gstat_value_aggr_results("total_mutants")+mResult->fomResult->total_mutants);
     create_update_aggr_results("mutant_kill_count",get_gstat_value_aggr_results("mutant_kill_count")+mResult->fomResult->mutant_kill_count);
     create_update_aggr_results("non_trivial_count",get_gstat_value_aggr_results("non_trivial_count")+mResult->fomResult->non_trivial_FOM_count);
     create_update_aggr_results("dumb_count",get_gstat_value_aggr_results("dumb_count")+mResult->fomResult->mutant_kill_count-mResult->fomResult->non_trivial_FOM_count);
     create_update_aggr_results("survived_count",get_gstat_value_aggr_results("survived_count")+mResult->fomResult->survived_count);
     create_update_aggr_results("killed_by_valgrind_count",get_gstat_value_aggr_results("killed_by_valgrind_count")+mResult->fomResult->killed_by_valgrind);
+    generate_derived_stats();
     flush_GStats();
     close_GStats();
     
