@@ -1,9 +1,9 @@
-#define GSTATS_PATH "gstats.xml"
 
-void open_GStats();
-void close_GStats();
-void flush_GStats();
-int clear_GStats();
+void open_GStats(char* GSTATS_PATH);
+void close_GStats(char* GSTATS_PATH);
+void flush_GStats(char* GSTATS_PATH);
+int clear_GStats(char* GSTATS_PATH);
+
 void create_update_gstat_mutation(char*mut_code,char*key,int value);
 int get_gstat_value_mutation(char*mut_code,char*key);
 

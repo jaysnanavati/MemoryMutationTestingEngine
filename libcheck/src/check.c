@@ -311,23 +311,23 @@ void srunner_add_suite (SRunner *sr, Suite *s)
   check_list_add_end(sr->slst, s);
 }
 
-void srunner_free (SRunner *sr){
+void record_mutation_results(SRunner *sr){
+  
   List *l;
   TestResult *tr;
   
   //Get temporary environment variables that store locations to mutation_results.log and tmp_results.log
   char* mutation_results_path = getenv("MUTATION_RESULTS_PATH");
   char* temp_results_path = getenv("TEMP_RESULTS_PATH");
+  char* is_mutate = getenv("IS_MUTATE"); 
   
-  if (sr == NULL)
-    return;
-  
-  if(mutation_results_path && temp_results_path){
+  if((mutation_results_path!=NULL && temp_results_path!=NULL)&& (strcmp(is_mutate,"true")==0)){
     int k=0;
     int test_counter=0;
     int tests_run = srunner_ntests_run(sr);
     int failed_tests = srunner_ntests_failed(sr);
-    int *killed_by_tests = calloc(sizeof(int),failed_tests);
+    int killed_by_tests_size=25;
+    int *killed_by_tests = calloc(sizeof(int),killed_by_tests_size);
     char buf[128], *pos = buf;
     int i=0;
     int mutant_kill_count;
@@ -335,31 +335,40 @@ void srunner_free (SRunner *sr){
     
     FILE* mutation_results= fopen(mutation_results_path,"a+");
     FILE* tmp_results = fopen(temp_results_path,"r");
+    
     List *l;
-    TestResult *tr;
+    TestResult *tr=NULL;
     
     
     l = sr->slst;
     
     if(srunner_ntests_failed(sr)==0){
       fprintf(mutation_results, "%s\n", "status: (survived!!)");
+        fflush(mutation_results);
+	fclose(mutation_results);
+	return;
     }else{
       fprintf(mutation_results, "status: (killed)\ndescription: (%d) of (%d) tests failed:\n",failed_tests,tests_run);
+      fflush(mutation_results);
     }
-    fflush(mutation_results);
+  
     
     for (check_list_front(l); !check_list_at_end(l); check_list_advance(l)) {
+      
       test_counter++;
       tr = check_list_val(l);
-      if(tr->rtype != CK_PASS){
-	killed_by_tests[k++]=test_counter;
-	fprintf(mutation_results, "%d) %s %s: %s\n",k+1, tr->tcname, tr->tname, tr->msg);
+      if(tr!=NULL && tr->rtype != CK_PASS){
+	if(k==killed_by_tests_size){
+	  killed_by_tests=realloc(killed_by_tests,sizeof(int)*(killed_by_tests_size*=2));
+	}
+	killed_by_tests[k]=test_counter;
+	k++;
+	fprintf(mutation_results, "%d) %s %s: %s\n",k+1, tr->tcname!=NULL?tr->tcname:"", tr->tname!=NULL?tr->tname:"", tr->msg!=NULL?tr->msg:"");
 	fflush(mutation_results);
       }
-    } 
-    fclose(mutation_results);
-    free (sr);
+    }
     
+    fclose(mutation_results);
     for (i=0 ; i < tests_run &&  killed_by_tests[i]!=0 ; i++) {
       if (i!=0) {
 	pos += sprintf(pos, ",");
@@ -377,6 +386,23 @@ void srunner_free (SRunner *sr){
     fwrite(newNum,1,strlen(newNum),tmp_results);
     fclose(tmp_results);
   }
+}
+
+
+void srunner_free (SRunner *sr){
+  List *l;
+  TestResult *tr;
+  
+  //Get temporary environment variables that store locations to mutation_results.log and tmp_results.log
+  char* mutation_results_path = getenv("MUTATION_RESULTS_PATH");
+  char* temp_results_path = getenv("TEMP_RESULTS_PATH");
+  char* is_mutate = getenv("IS_MUTATE"); 
+  
+  
+  if (sr == NULL)
+    return;
+  
+  record_mutation_results(sr);
   
   free (sr->stats);
   l = sr->slst;
@@ -393,6 +419,7 @@ void srunner_free (SRunner *sr){
   check_list_free (sr->resultlst);
   free (sr);
 }
+
 
 int srunner_ntests_failed (SRunner *sr)
 {

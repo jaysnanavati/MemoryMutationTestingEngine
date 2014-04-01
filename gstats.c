@@ -22,8 +22,8 @@ int total_infection_count=0;
 int total_valgrind_errors=0;
 
 
-int clear_GStats(){
-  close_GStats();
+int clear_GStats(char* GSTATS_PATH){
+  close_GStats(GSTATS_PATH);
   if(remove(GSTATS_PATH)==0){
     return 0;
   }else{
@@ -31,7 +31,7 @@ int clear_GStats(){
   }
 }
 
-void open_GStats(){
+void open_GStats(char* GSTATS_PATH){
   gstats = fopen(GSTATS_PATH, "ab+");
   doc = getdoc(GSTATS_PATH);
   if(doc ==NULL){
@@ -45,11 +45,11 @@ void open_GStats(){
       total_infection_count = atoi(tic);
       xmlFree(tic);
     }
-    flush_GStats();
+    flush_GStats(GSTATS_PATH);
   }
 }
 
-void close_GStats(){
+void close_GStats(char* GSTATS_PATH){
   if(gstats!=NULL){
     fclose(gstats);
   }
@@ -59,7 +59,7 @@ void close_GStats(){
   }
 }
 
-void flush_GStats(){
+void flush_GStats(char* GSTATS_PATH){
   if(xmlSaveFormatFileEnc(GSTATS_PATH,doc,NULL,1)==-1){
     //We should never get here, this is a malformed gstats file
     fprintf(stderr,"error: unable to create gstats.xml \n");

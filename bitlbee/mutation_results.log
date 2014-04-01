@@ -1,0 +1,6 @@
+
+**** Mutant: REM2N_0.c ****
+status: (survived!!)
+Valgrind errors: 38
+
+**** Mutant: RMNA_10.c ****

@@ -1,0 +1,32 @@
+Core team:
+
+Wilmer van der Gaast <wilmer@gaast.net>
+	Main developer
+
+
+Other contributors:
+
+Miklos Vajna <vmiklos@vmiklos.hu>
+	Skype module
+
+pesco <pesco@khjk.org>
+	OTR support
+
+
+Retired developers:
+
+Sjoerd 'lucumo' Hemminga <sjoerd@hemminga-online.nl>
+	NickServ, documentation
+
+Jelmer 'ctrlsoft' Vernooij <jelmer@samba.org>
+	Documentation, general hacking, Win32 port
+
+Maurits Dijkstra <mauritsd@xs4all.nl>
+	Daemon dude, plus some other stuff
+
+Geert Mulders <g.c.w.m.mulders@gmail.com>
+	Initial version of the Twitter module
+
+ulim <a.sporto+bee@gmail.com>
+Marijn Kruisselbrink
+	File transfer support

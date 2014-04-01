@@ -20,12 +20,8 @@ function main
 	deconstruct * TXLargs
 		"-mut_out" Value [stringlit] MoreOptions [repeat stringlit]
 	export mut_folder [stringlit] Value
-	construct sys_mut_out [stringlit]
-		"mkdir -p mutation_out/"
-	construct mut_out [stringlit]
-		 sys_mut_out [quote Value]
 	by
-		PUT [system mut_out][driver]		
+		PUT [driver]		
 end function
 
 function driver
@@ -442,8 +438,7 @@ rule generateMutant MC [stringlit] defValMax [number]
 		P [program]	 
 	where callVal[<=defValMax]
 	where localPassCounter[>globalPassCounter]
-    construct out_dir [stringlit] "mutation_out/"
-    construct out [stringlit] out_dir [+ mut_folder] [+"/"]
+    construct out [stringlit]  mut_folder [+"/"]
     construct MI [stringlit] MC [quote globalPassCounter][+".c"]
     construct final_output [stringlit] out [+ MI]
 	export globalPassCounter globalPassCounter[+1]
