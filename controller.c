@@ -16,15 +16,9 @@
 #include <libconfig.h>
 #include <hashset.h>
 
+#include "CFGEval.h"
 #include "valgrindEval.h"
 #include "gstats.h"
-#include "e4c/e4c.h"
-
-//With regards to the HOMs and the calculation of the fitness function, with regards to memory based operations, can we have a new parameter
-//that we can optimize called: damage. As when looking at such mutations, although a mutant might be very fragile, but at the same time it might have
-//greater damage to the memory model and vice versa, which we can uncover using memory tools such as valgrind. By adding this factor in our optimization 
-//algorithm to identify mutants that do not fail a lot of tests AND have a great adverse affect to the memory modal rather than choosing only mutants
-//that do not fail a lot of tests.
 
 typedef struct {
   char *sourceRootDir;
@@ -39,6 +33,7 @@ typedef struct {
   
 } Config;
 
+
 typedef struct{
   char *mutant_source_file;
   //fragility is between 0->1
@@ -47,6 +42,8 @@ typedef struct{
   int *killed_by_tests;
   int killed_by_tests_count;
   ValgrindResult *valgrindResult;
+  //CFGDeviation
+  double cfgDeviation;
 } Mutant;
 
 typedef struct{
@@ -57,6 +54,8 @@ typedef struct{
   //Discard HOM when fitness =0 or 1, fitness is between 0->1
   double fitness;
   int FOMutants_count;
+  //CFGDeviation
+  double cfgDeviation;
 } HOMutant;
 
 
@@ -93,8 +92,7 @@ FILE* temp_results;
 char* mutation_results_path;
 char* make_logs_dir;
 char* temp_results_path=NULL;
-char*GSTATS_PATH=NULL;
-
+char* GSTATS_PATH=NULL;
 
 int startprogram(char*programparams[],char* stdoutfd,int redirect){
   int status = 0;
@@ -247,12 +245,13 @@ int startMake(char**args,char*currentMutation){
   if(pid==0){
     //Disable runtime protection provided by glibc in order to ensure mutants are injected and run 
     putenv("MALLOC_CHECK_=0");
-    
     make_logs=open(make_logs_dir, O_RDWR | O_APPEND);
-    char *title="--> MUTATION ::";
-    char *mut_txt = malloc(snprintf(NULL, 0, "\n%s %s\n\n", title,currentMutation ) + 1);
-    sprintf(mut_txt, "\n%s %s\n\n",title , currentMutation);
-    write(make_logs,mut_txt,strlen(mut_txt));
+    if(currentMutation!=NULL){
+      char *title="--> MUTATION ::";
+      char *mut_txt = malloc(snprintf(NULL, 0, "\n%s %s\n\n", title,currentMutation ) + 1);
+      sprintf(mut_txt, "\n%s %s\n\n",title , currentMutation);
+      write(make_logs,mut_txt,strlen(mut_txt));
+    }
     dup2(make_logs, 1);
     dup2(make_logs, 2);
     close(make_logs);
@@ -269,7 +268,7 @@ int startMake(char**args,char*currentMutation){
   return -1;
 }
 
-int runMake(char*projectDir,char*currentMutation,char*makeTestTarget,MResult*mResult){
+int runMake(char*projectDir,char*currentMutation,char*makeTestTarget){
   char**args_make = calloc(sizeof(char*),5);
   args_make[0]="make";
   args_make[1]="-C";
@@ -292,6 +291,23 @@ int runMake(char*projectDir,char*currentMutation,char*makeTestTarget,MResult*mRe
   free(args_make);
   
   return 0;
+}
+
+void extractCFGBranches(char*srcDir,char*outputDir,char*filename){
+  char **args_genCFGBranches = malloc(sizeof(char*)*6);
+  args_genCFGBranches[0]="bash";
+  args_genCFGBranches[1]="GenCFGBranches.sh";
+  args_genCFGBranches[2]=srcDir;
+  args_genCFGBranches[3]=outputDir;
+  if(filename==NULL){
+    args_genCFGBranches[4]=NULL;
+    args_genCFGBranches[5]=NULL;
+  }else{
+    args_genCFGBranches[4]=filename;
+    args_genCFGBranches[5]=NULL;
+  }
+  startprogram(args_genCFGBranches,NULL,0);
+  free(args_genCFGBranches);
 }
 
 //stats[0] = current mutant kill count
@@ -388,7 +404,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
   
   //Evaluate mutant
-  int make_result = runMake(makeDir,str,user_config->makeTestTarget,mResult);
+  int make_result = runMake(makeDir,str,user_config->makeTestTarget);
   if(make_result==2){
     mResult->fomResult->mutant_kill_count++;
     //Update gstats to record mutant did not execute
@@ -398,6 +414,11 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   }else{
     //Update gstats to record mutant generation
     create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count")+1);
+    
+    char* cfg_out = malloc(snprintf(NULL, 0, "%s/mutation_out/%s",cwd,original_file_Name_dir) + 1);
+    sprintf(cfg_out, "%s/mutation_out/%s",cwd,original_file_Name_dir);
+    extractCFGBranches(makeDir,cfg_out,original_file_Name_dir);
+    free(cfg_out);
   }
   
   //Get mutants killed by tests after evaluation
@@ -630,7 +651,7 @@ double genHOMFitness(char* srcDir,char*target,char*makeDir,Config *user_config,c
   //Get mutants killed by tests before new evaluation
   int prev_killed_by_tests=get_non_trivial_FOM_stats()[0];
   
-  if(runMake(makeDir,hom_file_name,user_config->makeTestTarget,mResult)==2){
+  if(runMake(makeDir,hom_file_name,user_config->makeTestTarget)==2){
     mResult->homResult->mutant_kill_count++;
   }
   
@@ -696,6 +717,7 @@ void generateSubsumingHOMs(char* srcDir,char*target,char*makeDir,Config *user_co
       tmp_hom->FOMutants = malloc(mResult->fomResult->non_trivial_FOM_count*sizeof(Mutant));
       tmp_hom->FOMutants_count=0;
       tmp_hom->fragility=0.0;
+      tmp_hom->cfgDeviation=0.0;
       tmp_hom->fitness=0.0;
       //Combine the FOMs in the optimum_hom with another fom in the population
       if(optimum_hom!=NULL){
@@ -742,12 +764,13 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   //Extract file name in order to rename mutants
   char *original_file_Name =strndup(chptr+1,strlen(args_txl[4])-dif);
   char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4])-(dif+3));
+  char *makeDir =strndup(args_txl[4],dif);
   
   char * args3 = malloc(snprintf(NULL, 0, "%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c") + 1);
   sprintf(args3,"%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c");
   args_txl[3]=args3;
   
-   //Create the folder that stores the mutations
+  //Create the folder that stores the mutations
   char m_dir[strlen(cwd)+strlen("mutation_out")+strlen(original_file_Name_dir)+3];
   sprintf(m_dir,"%s/mutation_out/%s",cwd,original_file_Name_dir);
   mkdir(m_dir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -772,7 +795,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   close(make_logs);
   
   printf("\n--> Successfully generated mutations (FOMs) for: %s in mutation_out/%s, now performing injections <---\n\n",*source,original_file_Name_dir);
-  MResult* mResult = inject_mutations(mut_out_dir,args_txl[4],user_config->sourceRootDir,original_file_Name,user_config,args3,original_file_Name_dir,cwd);
+  MResult* mResult = inject_mutations(mut_out_dir,args_txl[4],makeDir,original_file_Name,user_config,args3,original_file_Name_dir,cwd);
   
   char *mut_out_dir_hom = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir, "HOM") + 1);
   sprintf(mut_out_dir_hom,"%s/%s", mut_out_dir, "HOM");
@@ -886,9 +909,9 @@ int main(int argc, char**argv) {
   char * cwd = getcwd(NULL, 0);
   int args_index=1;
   
-   //Set "gstats.xml" location
-    GSTATS_PATH=malloc(snprintf(NULL, 0, "%s/gstats.xml", cwd) + 1);
-    sprintf(GSTATS_PATH, "%s/gstats.xml", cwd);
+  //Set "gstats.xml" location
+  GSTATS_PATH=malloc(snprintf(NULL, 0, "%s/gstats.xml", cwd) + 1);
+  sprintf(GSTATS_PATH, "%s/gstats.xml", cwd);
   
   if(argc==2){
     open_GStats(GSTATS_PATH);
@@ -944,7 +967,10 @@ int main(int argc, char**argv) {
     
     //Create mutation_out
     mkdir("mutation_out",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    //Create gcov_out
+    mkdir("mutation_out/PUT_Gcov",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     
+    //copy PUT
     char *args_cp[5];
     args_cp[0]="cp";
     args_cp[1]="-r";
@@ -952,6 +978,10 @@ int main(int argc, char**argv) {
     args_cp[3]=copy_put;
     args_cp[4]=NULL;
     startprogram(args_cp,NULL,0);
+    
+    //Generate initial stats for PUT
+    runMake(copy_put,NULL,user_config->makeTestTarget);
+    extractCFGBranches(copy_put,"mutation_out/PUT_Gcov",NULL);
     
     if(user_config->testingFramework==1){
       //Replace the CuTest library in the project with our modified library
