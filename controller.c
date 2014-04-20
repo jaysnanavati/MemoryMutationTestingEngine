@@ -44,6 +44,7 @@ typedef struct{
   ValgrindResult *valgrindResult;
   //CFGDeviation
   double cfgDeviation;
+  double damage;
 } Mutant;
 
 typedef struct{
@@ -56,6 +57,7 @@ typedef struct{
   int FOMutants_count;
   //CFGDeviation
   double cfgDeviation;
+  double damage;
 } HOMutant;
 
 
@@ -405,6 +407,9 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   
   //Evaluate mutant
   int make_result = runMake(makeDir,str,user_config->makeTestTarget);
+  double cfgDeviation =0.0;
+  double damage =0.0;
+  
   if(make_result==2){
     mResult->fomResult->mutant_kill_count++;
     //Update gstats to record mutant did not execute
@@ -419,6 +424,25 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     sprintf(cfg_out, "%s/mutation_out/%s",cwd,original_file_Name_dir);
     extractCFGBranches(makeDir,cfg_out,original_file_Name_dir);
     free(cfg_out);
+    //compare CFG branches with PUT
+    char* cfg_out_file = malloc(snprintf(NULL, 0, "%s/mutation_out/%s/%s.c.gcov.branches",cwd,original_file_Name_dir,original_file_Name_dir) + 1);
+    sprintf(cfg_out_file, "%s/mutation_out/%s/%s.c.gcov.branches",cwd,original_file_Name_dir,original_file_Name_dir);
+    //original path
+    char* cfg_original_file = malloc(snprintf(NULL, 0, "%s/mutation_out/PUT_Gcov/%s.c.gcov.branches",cwd,original_file_Name_dir) + 1);
+    sprintf(cfg_original_file, "%s/mutation_out/PUT_Gcov/%s.c.gcov.branches",cwd,original_file_Name_dir);
+    
+    //calculate the deviation
+    cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
+    if(cfgDeviation>0){
+      create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count")+1);
+    }
+     
+    mutation_results = fopen(mutation_results_path,"a+");
+    fprintf(mutation_results, "CFG Deviation : %.2f%%\n",cfgDeviation*100.00);
+    fflush(mutation_results);
+    fclose(mutation_results);
+    free(cfg_original_file);
+    free(cfg_out_file);
   }
   
   //Get mutants killed by tests after evaluation
@@ -449,6 +473,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       non_trivial_FOMS_ptr[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
       strncpy(non_trivial_FOMS_ptr[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
       non_trivial_FOMS_ptr[NTFC].fragility=((double)stats[1]/(double)stats[2]);
+      non_trivial_FOMS_ptr[NTFC].cfgDeviation=cfgDeviation;
       
       non_trivial_FOMS_ptr[NTFC].killed_by_tests = calloc(sizeof(int),stats[1]);
       non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];

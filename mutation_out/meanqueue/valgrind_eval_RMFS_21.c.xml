@@ -12,8 +12,8 @@
   <line>Command: /home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</line>
 </preamble>
 
-<pid>15705</pid>
-<ppid>15602</ppid>
+<pid>19503</pid>
+<ppid>19388</ppid>
 <tool>memcheck</tool>
 
 <args>
@@ -33,13 +33,13 @@
 
 <status>
   <state>RUNNING</state>
-  <time>00:00:00:00.059 </time>
+  <time>00:00:00:00.053 </time>
 </status>
 
 
 <status>
   <state>FINISHED</state>
-  <time>00:00:00:00.647 </time>
+  <time>00:00:00:00.642 </time>
 </status>
 
 <error>
