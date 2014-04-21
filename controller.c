@@ -435,6 +435,9 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
     if(cfgDeviation>0){
       create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count")+1);
+      //highest, lowest,median
+    }else{
+      create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count"));
     }
      
     mutation_results = fopen(mutation_results_path,"a+");
@@ -657,6 +660,9 @@ double genHOMFitness(char* srcDir,char*target,char*makeDir,Config *user_config,c
   char hom_file_name[strlen(srcDir)+20];
   
   FILE* hom_dir_file =fopen(hom_dir,"r");
+  if(hom_dir_file==NULL){
+    return -1;
+  }
   fscanf (hom_dir_file, "%s %s",hom_file_name , hom_dir_loc);
   fclose(hom_dir_file);
   
@@ -759,9 +765,16 @@ void generateSubsumingHOMs(char* srcDir,char*target,char*makeDir,Config *user_co
       //Evaluate fitness of the new HOM to determine the optimum_hom
       double tmp_hom_fitness = genHOMFitness(srcDir,target,makeDir,user_config,original_source,mResult,tmp_hom);
       
-      if(optimum_hom==NULL || (((tmp_hom_fitness >0) && (tmp_hom_fitness <1))&& tmp_hom_fitness >optimum_hom->fitness)){
-	optimum_hom = tmp_hom;
-      }else{
+      if(tmp_hom_fitness!=-1){
+	if(optimum_hom==NULL){
+	  optimum_hom = tmp_hom;
+	}else if(tmp_hom_fitness >0 && tmp_hom_fitness <1){
+	  if(tmp_hom_fitness >optimum_hom->fitness){
+	    optimum_hom = tmp_hom;
+	  }
+	}
+      }
+      if(optimum_hom==NULL){
 	no_new_optimum++;
       }
       
@@ -770,7 +783,9 @@ void generateSubsumingHOMs(char* srcDir,char*target,char*makeDir,Config *user_co
 	hom_list_size=hom_list_size*2;
 	hom_list = realloc(hom_list,hom_list_size*sizeof(HOMutant));
       }
-      hom_list[hom_list_counter++]=*tmp_hom;
+      if(tmp_hom_fitness!=-1){
+	hom_list[hom_list_counter++]=*tmp_hom;
+      }
     }
   }
 }
@@ -1005,8 +1020,10 @@ int main(int argc, char**argv) {
     startprogram(args_cp,NULL,0);
     
     //Generate initial stats for PUT
+    setenv("IS_MUTATE","false",1);
     runMake(copy_put,NULL,user_config->makeTestTarget);
     extractCFGBranches(copy_put,"mutation_out/PUT_Gcov",NULL);
+    setenv("IS_MUTATE","true",1);
     
     if(user_config->testingFramework==1){
       //Replace the CuTest library in the project with our modified library
