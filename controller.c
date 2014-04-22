@@ -76,6 +76,7 @@ typedef struct{
   int total_mutants;
   int total_tests;
   int killed_by_valgrind;
+  int caused_CFG_deviation;
   int total_valgrind_errors;
 } FOMResult;
 
@@ -435,7 +436,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
     if(cfgDeviation>0){
       create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count")+1);
-      //highest, lowest,median
+      mResult->fomResult->caused_CFG_deviation++;
     }else{
       create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count"));
     }
@@ -577,6 +578,7 @@ MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_f
   mResult->fomResult->non_trivial_FOMS = malloc(non_trivial_FOM_buffer*sizeof(Mutant));
   mResult->fomResult->survived=malloc(non_trivial_FOM_buffer*sizeof(Mutant));
   mResult->fomResult->killed_by_valgrind=0;
+  mResult->fomResult->caused_CFG_deviation=0;
   mResult->fomResult->survived_count=0;
   mResult->fomResult->total_valgrind_errors=0;
   mResult->fomResult->total_tests=0;
