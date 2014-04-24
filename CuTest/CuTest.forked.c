@@ -262,7 +262,7 @@ void CuSuiteRun(CuSuite* testSuite)
   //Get temporary environment variables that store locations to mutation_results.log and tmp_results.log
   char* mutation_results_path = getenv("MUTATION_RESULTS_PATH");
   char* temp_results_path = getenv("TEMP_RESULTS_PATH");
-  char* is_mutate = getenv("IS_MUTATE"); 
+  int is_mutate = strcmp(getenv("IS_MUTATE"),"true")==0?1:0; 
   
   FILE* mutation_results= fopen(mutation_results_path,"a+");
   
@@ -276,11 +276,11 @@ void CuSuiteRun(CuSuite* testSuite)
     }
   }
   
-  if (testSuite->failCount == 0)
+  if(!is_mutate){
+    return;
+  }else if (testSuite->failCount == 0)
   {
-   if(strcmp(is_mutate,"true")==0){ 
-   fwrite("status: (survived!!)\n",1,strlen("status: (survived!!)\n"),mutation_results);
-   }
+     fprintf(mutation_results,"status: (survived!!)\n");
   }else{
     
     fprintf(mutation_results, "status: (killed)\ndescription: (%d) of (%d) tests failed:\n",testSuite->failCount,testSuite->count);
