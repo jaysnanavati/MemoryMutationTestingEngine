@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+
+<valgrindoutput>
+
+<protocolversion>4</protocolversion>
+<protocoltool>memcheck</protocoltool>
+
+<preamble>
+  <line>Memcheck, a memory error detector</line>
+  <line>Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.</line>
+  <line>Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info</line>
+  <line>Command: /home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</line>
+</preamble>
+
+<pid>16021</pid>
+<ppid>15850</ppid>
+<tool>memcheck</tool>
+
+<args>
+  <vargv>
+    <exe>/usr/bin/valgrind.bin</exe>
+    <arg>--suppressions=/usr/lib/valgrind/debian-libc6-dbg.supp</arg>
+    <arg>-q</arg>
+    <arg>--trace-children=yes</arg>
+    <arg>--child-silent-after-fork=yes</arg>
+    <arg>--xml=yes</arg>
+    <arg>--xml-file=/home/jay/Desktop/Mutate/Mutate/mutation_out/meanqueue/valgrind_eval_REBSPO_0.c.xml</arg>
+  </vargv>
+  <argv>
+    <exe>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</exe>
+  </argv>
+</args>
+
+<status>
+  <state>RUNNING</state>
+  <time>00:00:00:00.056 </time>
+</status>
+
+
+<status>
+  <state>FINISHED</state>
+  <time>00:00:00:00.642 </time>
+</status>
+
+<error>
+  <unique>0xb</unique>
+  <tid>1</tid>
+  <kind>Leak_DefinitelyLost</kind>
+  <xwhat>
+    <text>272 (16 direct, 256 indirect) bytes in 1 blocks are definitely lost in loss record 10 of 12</text>
+    <leakedbytes>272</leakedbytes>
+    <leakedblocks>1</leakedblocks>
+  </xwhat>
+  <stack>
+    <frame>
+      <ip>0x4C2A2DB</ip>
+      <obj>/usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so</obj>
+      <fn>malloc</fn>
+    </frame>
+    <frame>
+      <ip>0x401C98</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>CuStringNew</fn>
+    </frame>
+    <frame>
+      <ip>0x4012FB</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>RunAllTests</fn>
+    </frame>
+    <frame>
+      <ip>0x4014E7</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>main</fn>
+    </frame>
+  </stack>
+</error>
+
+<error>
+  <unique>0xd</unique>
+  <tid>1</tid>
+  <kind>Leak_DefinitelyLost</kind>
+  <xwhat>
+    <text>8,528 (8,208 direct, 320 indirect) bytes in 1 blocks are definitely lost in loss record 12 of 12</text>
+    <leakedbytes>8528</leakedbytes>
+    <leakedblocks>1</leakedblocks>
+  </xwhat>
+  <stack>
+    <frame>
+      <ip>0x4C2A2DB</ip>
+      <obj>/usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so</obj>
+      <fn>malloc</fn>
+    </frame>
+    <frame>
+      <ip>0x402A98</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>CuSuiteNew</fn>
+    </frame>
+    <frame>
+      <ip>0x401316</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>RunAllTests</fn>
+    </frame>
+    <frame>
+      <ip>0x4014E7</ip>
+      <obj>/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master/tests</obj>
+      <fn>main</fn>
+    </frame>
+  </stack>
+</error>
+
+<errorcounts>
+</errorcounts>
+
+
+</valgrindoutput>
+

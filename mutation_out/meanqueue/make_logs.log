@@ -1,0 +1,699 @@
+
+--> MUTATION :: REC2A_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+FFFF
+
+there were (4) test failures:
+1) Testmeanqueue_init_is_zero: test_meanqueue.c:20: assert failed
+2) Testmeanqueue_offer_populates_correct_mean: test_meanqueue.c:34: assert failed
+3) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+4) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+!!!FAILURES!!!
+Runs: 4 Passes: 0 Fails: 4
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:75.00% of 32
+No branches
+Calls executed:85.71% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:80.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:82.09% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REDAWN_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+make: *** [tests] Segmentation fault (core dumped)
+make: *** Deleting file `tests'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSLO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REDAWZ_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REC2A_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+..FF
+
+there were (2) test failures:
+1) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+2) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+!!!FAILURES!!!
+Runs: 4 Passes: 2 Fails: 2
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:87.50% of 32
+No branches
+Calls executed:92.86% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:94.03% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSPO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: FPIBO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: RMFS_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 19
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 66
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: RESOTPE_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: RMFS_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 19
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 66
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: FPDBO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSNO_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+make: *** [tests] Segmentation fault (core dumped)
+make: *** Deleting file `tests'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REC2M_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+...F
+
+there was (1) test failure:
+1) Testmeanqueue_offer_circles_around_array_size: test_meanqueue.c:71: assert failed
+
+!!!FAILURES!!!
+Runs: 4 Passes: 3 Fails: 1
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:93.75% of 32
+No branches
+Calls executed:96.43% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:97.01% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: FPDBO_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REDAWN_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+make: *** [tests] Segmentation fault (core dumped)
+make: *** Deleting file `tests'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSLO_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REC2M_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+..F.
+
+there was (1) test failure:
+1) Testmeanqueue_offer_populates_correct_mean2: test_meanqueue.c:52: assert failed
+
+!!!FAILURES!!!
+Runs: 4 Passes: 3 Fails: 1
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:93.75% of 32
+No branches
+Calls executed:96.43% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:97.01% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: FPIBO_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+make: *** [tests] Segmentation fault (core dumped)
+make: *** Deleting file `tests'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSNO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+make: *** [tests] Segmentation fault (core dumped)
+make: *** Deleting file `tests'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REBSPO_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: REDAWZ_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+
+--> MUTATION :: RESOTPE_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -c -o meanqueue.o meanqueue.c
+gcc -fsigned-char -fprofile-arcs -ftest-coverage -o tests main.c meanqueue.o test_meanqueue.c CuTest.c
+./tests
+ running Testmeanqueue_init_is_zero
+ running Testmeanqueue_offer_populates_correct_mean
+ running Testmeanqueue_offer_populates_correct_mean2
+ running Testmeanqueue_offer_circles_around_array_size
+....
+
+OK (4 tests)
+
+gcov -b -c main.c test_meanqueue.c meanqueue.c
+File 'main.c'
+Lines executed:100.00% of 15
+No branches
+Calls executed:100.00% of 15
+Creating 'main.c.gcov'
+
+File 'test_meanqueue.c'
+Lines executed:100.00% of 32
+No branches
+Calls executed:100.00% of 28
+Creating 'test_meanqueue.c.gcov'
+
+File 'meanqueue.c'
+Lines executed:100.00% of 20
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+Creating 'meanqueue.c.gcov'
+
+Lines executed:100.00% of 67
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/CMeanQueue-master'
