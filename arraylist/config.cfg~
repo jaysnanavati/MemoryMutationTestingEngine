@@ -1,6 +1,0 @@
-sourceRootDir="/home/jay/Desktop/Mutate/small-put/CFixedArraylist-master";
-source = ("fixed_arraylist.c");
-outputDir="";
-testingFramework="cutest";
-CuTestLibSource="CuTest.c";
-executablePath="tests_main";
