@@ -1,0 +1,101 @@
+
+**** Mutant: REBSNO_20.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSPO_21.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REC2A_0.c ****
+CFG Deviation : 100.00%
+
+**** Mutant: REDAWN_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSLO_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REDAWZ_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2A_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSLO_21.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSPO_30.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REM2A_1.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REDAWZ_20.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSNO_30.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSPO_0.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSLO_30.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSNO_21.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REDAWZ_21.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: RESOTPE_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSPO_20.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REM2A_0.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSNO_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REDAWN_20.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2M_1.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REDAWN_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSLO_1.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REC2M_0.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSLO_31.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSNO_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REDAWN_21.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSPO_31.c ****
+CFG Deviation : 0.00%
+
+**** Mutant: REBSLO_20.c ****

@@ -1,0 +1,155 @@
+        -:    0:Source:raft_server_properties.c
+        -:    0:Programs:4
+        -:    1:
+        -:    2:/**
+        -:    3: * Copyright (c) 2013, Willem-Hendrik Thiart
+        -:    4: * Use of this source code is governed by a BSD-style license that can be
+        -:    5: * found in the LICENSE file. 
+        -:    6: *
+        -:    7: * @file
+        -:    8: * @author Willem Thiart himself@willemthiart.com
+        -:    9: * @version 0.1
+        -:   10: */
+        -:   11:
+        -:   12:#include <stdlib.h>
+        -:   13:#include <string.h>
+        -:   14:#include <stdio.h>
+        -:   15:#include <assert.h>
+        -:   16:
+        -:   17:/* for varags */
+        -:   18:#include <stdarg.h>
+        -:   19:
+        -:   20:#include "raft.h"
+        -:   21:#include "raft_log.h"
+        -:   22:#include "raft_private.h"
+        -:   23:
+function raft_set_election_timeout called 9 returned 100% blocks executed 100%
+        9:   24:void raft_set_election_timeout(raft_server_t* me_, int millisec)
+        -:   25:{
+        9:   26:    raft_server_private_t* me = (void*)me_;
+        9:   27:    me->election_timeout = millisec;
+        9:   28:}
+        -:   29:
+function raft_set_request_timeout called 0 returned 0% blocks executed 0%
+    #####:   30:void raft_set_request_timeout(raft_server_t* me_, int millisec)
+        -:   31:{
+    #####:   32:    raft_server_private_t* me = (void*)me_;
+    #####:   33:    me->request_timeout = millisec;
+    #####:   34:}
+        -:   35:
+function raft_get_nodeid called 105 returned 100% blocks executed 100%
+      105:   36:int raft_get_nodeid(raft_server_t* me_)
+        -:   37:{
+      105:   38:    return ((raft_server_private_t*)me_)->nodeid;
+        -:   39:}
+        -:   40:
+function raft_get_election_timeout called 1 returned 100% blocks executed 100%
+        1:   41:int raft_get_election_timeout(raft_server_t* me_)
+        -:   42:{
+        1:   43:    return ((raft_server_private_t*)me_)->election_timeout;
+        -:   44:}
+        -:   45:
+function raft_get_request_timeout called 1 returned 100% blocks executed 100%
+        1:   46:int raft_get_request_timeout(raft_server_t* me_)
+        -:   47:{
+        1:   48:    return ((raft_server_private_t*)me_)->request_timeout;
+        -:   49:}
+        -:   50:
+function raft_get_num_nodes called 6 returned 100% blocks executed 100%
+        6:   51:int raft_get_num_nodes(raft_server_t* me_)
+        -:   52:{
+        6:   53:    return ((raft_server_private_t*)me_)->num_nodes;
+        -:   54:}
+        -:   55:
+        -:   56:
+function raft_get_timeout_elapsed called 8 returned 100% blocks executed 100%
+        8:   57:int raft_get_timeout_elapsed(raft_server_t* me_)
+        -:   58:{
+        8:   59:    return ((raft_server_private_t*)me_)->timeout_elapsed;
+        -:   60:}
+        -:   61:
+function raft_get_log_count called 12 returned 100% blocks executed 100%
+       12:   62:int raft_get_log_count(raft_server_t* me_)
+        -:   63:{
+       12:   64:    raft_server_private_t* me = (void*)me_;
+       12:   65:    return log_count(me->log);
+call    0 returned 12
+        -:   66:}
+        -:   67:
+function raft_get_voted_for called 9 returned 100% blocks executed 100%
+        9:   68:int raft_get_voted_for(raft_server_t* me_)
+        -:   69:{
+        9:   70:    return ((raft_server_private_t*)me_)->voted_for;
+        -:   71:}
+        -:   72:
+function raft_set_current_term called 39 returned 100% blocks executed 100%
+       39:   73:void raft_set_current_term(raft_server_t* me_, int term)
+        -:   74:{
+       39:   75:    raft_server_private_t* me = (void*)me_;
+       39:   76:    me->current_term = term;
+       39:   77:}
+        -:   78:
+function raft_get_current_term called 75 returned 100% blocks executed 100%
+       75:   79:int raft_get_current_term(raft_server_t* me_)
+        -:   80:{
+       75:   81:    return ((raft_server_private_t*)me_)->current_term;
+        -:   82:}
+        -:   83:
+function raft_set_current_idx called 5 returned 100% blocks executed 100%
+        5:   84:void raft_set_current_idx(raft_server_t* me_, int idx)
+        -:   85:{
+        5:   86:    raft_server_private_t* me = (void*)me_;
+        5:   87:    me->current_idx = idx;
+        5:   88:}
+        -:   89:
+function raft_get_current_idx called 73 returned 100% blocks executed 100%
+       73:   90:int raft_get_current_idx(raft_server_t* me_)
+        -:   91:{
+       73:   92:    return ((raft_server_private_t*)me_)->current_idx;
+        -:   93:}
+        -:   94:
+function raft_get_my_id called 0 returned 0% blocks executed 0%
+    #####:   95:int raft_get_my_id(raft_server_t* me_)
+        -:   96:{
+    #####:   97:    return ((raft_server_private_t*)me_)->nodeid;
+        -:   98:}
+        -:   99:
+function raft_set_commit_idx called 7 returned 100% blocks executed 100%
+        7:  100:void raft_set_commit_idx(raft_server_t* me_, int idx)
+        -:  101:{
+        7:  102:    raft_server_private_t* me = (void*)me_;
+        7:  103:    me->commit_idx = idx;
+        7:  104:}
+        -:  105:
+function raft_set_last_applied_idx called 5 returned 100% blocks executed 100%
+        5:  106:void raft_set_last_applied_idx(raft_server_t* me_, int idx)
+        -:  107:{
+        5:  108:    raft_server_private_t* me = (void*)me_;
+        5:  109:    me->last_applied_idx = idx;
+        5:  110:}
+        -:  111:
+function raft_get_last_applied_idx called 7 returned 100% blocks executed 100%
+        7:  112:int raft_get_last_applied_idx(raft_server_t* me_)
+        -:  113:{
+        7:  114:    return ((raft_server_private_t*)me_)->last_applied_idx;
+        -:  115:}
+        -:  116:
+function raft_get_commit_idx called 30 returned 100% blocks executed 100%
+       30:  117:int raft_get_commit_idx(raft_server_t* me_)
+        -:  118:{
+       30:  119:    return ((raft_server_private_t*)me_)->commit_idx;
+        -:  120:}
+        -:  121:
+function raft_set_state called 115 returned 100% blocks executed 100%
+      115:  122:void raft_set_state(raft_server_t* me_, int state)
+        -:  123:{
+      115:  124:    raft_server_private_t* me = (void*)me_;
+      115:  125:    me->state = state;
+      115:  126:}
+        -:  127:
+function raft_get_state called 87 returned 100% blocks executed 100%
+       87:  128:int raft_get_state(raft_server_t* me_)
+        -:  129:{
+       87:  130:    return ((raft_server_private_t*)me_)->state;
+        -:  131:}
+        -:  132:

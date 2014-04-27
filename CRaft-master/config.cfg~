@@ -1,0 +1,6 @@
+sourceRootDir="/home/jay/Desktop/Mutate/small-put/CRaft-master";
+source = ("raft_log.c");
+outputDir="";
+testingFramework="cutest";
+CuTestLibSource="tests/CuTest.c";
+executablePath="tests_main";

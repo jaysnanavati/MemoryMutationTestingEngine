@@ -1,0 +1,359 @@
+        -:    0:Source:quadratic_probing_hashmap.c
+        -:    0:Programs:3
+        -:    1:#include <stdio.h>
+        -:    2:#include <stdlib.h>
+        -:    3:#include <strings.h>
+        -:    4:#include <string.h>
+        -:    5:#include <assert.h>
+        -:    6:#include "quadratic_probing_hashmap.h"
+        -:    7:#define SPACERATIO 0.5
+        -:    8:static int __tombstone;
+        -:    9:typedef struct hash_node_s hash_node_t;
+        -:   10:struct hash_node_s {
+        -:   11:    void * key;
+        -:   12:    void * val;
+        -:   13:};
+        -:   14:static void __ensurecapacity (hashmapq_t * h);
+        -:   15:
+function is_power_of_two called 24 returned 100% blocks executed 83%
+       24:   16:static int is_power_of_two (unsigned int x) {
+       24:   17:    return ((x != 0) && !(x & (x - 1)));
+branch  0 taken 24 (fallthrough)
+branch  1 taken 0
+branch  2 taken 24 (fallthrough)
+branch  3 taken 0
+        -:   18:}
+        -:   19:
+function hashmapq_new called 24 returned 100% blocks executed 80%
+       24:   20:hashmapq_t * hashmapq_new (func_longhash_f hash, func_longcmp_f cmp, unsigned int initial_capacity) {
+        -:   21:    hashmapq_t * h;
+       24:   22:    assert (is_power_of_two (initial_capacity));
+call    0 returned 24
+branch  1 taken 0 (fallthrough)
+branch  2 taken 24
+call    3 never executed
+       24:   23:    h = calloc (1, sizeof (hashmapq_t));
+       24:   24:    h->size = initial_capacity;
+       24:   25:    h->array = calloc (h->size, sizeof (hash_node_t));
+       24:   26:    h->hash = hash;
+       24:   27:    h->compare = cmp;
+       24:   28:    return h;
+        -:   29:}
+        -:   30:
+function hashmapq_count called 51 returned 100% blocks executed 100%
+       51:   31:int hashmapq_count (const hashmapq_t * h) {
+       51:   32:    return h->count;
+        -:   33:}
+        -:   34:
+function hashmapq_size called 2 returned 100% blocks executed 100%
+        2:   35:int hashmapq_size (hashmapq_t * h) {
+        2:   36:    return h->size;
+        -:   37:}
+        -:   38:
+function hashmapq_clear called 24 returned 100% blocks executed 85%
+       24:   39:void hashmapq_clear (hashmapq_t * h) {
+        -:   40:    int ii;
+      270:   41:    for (ii = 0; ii < h->size; ii++) {
+branch  0 taken 246
+branch  1 taken 24 (fallthrough)
+        -:   42:        hash_node_t * n;
+      246:   43:        n = &((hash_node_t *) h->array)[ii];
+      246:   44:        if (NULL == n->key)
+branch  0 taken 188 (fallthrough)
+branch  1 taken 58
+      188:   45:            continue;
+       58:   46:        if (n->key == (void *) &__tombstone) {
+branch  0 taken 23 (fallthrough)
+branch  1 taken 35
+       23:   47:            n->key = NULL;
+       23:   48:            continue;
+        -:   49:        }
+       35:   50:        n->key = NULL;
+       35:   51:        h->count--;
+       35:   52:        assert (0 <= h -> count);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 35
+call    2 never executed
+        -:   53:    }
+       24:   54:    assert (0 == hashmapq_count (h));
+call    0 returned 24
+branch  1 taken 0 (fallthrough)
+branch  2 taken 24
+call    3 never executed
+       24:   55:}
+        -:   56:
+function hashmapq_free called 22 returned 100% blocks executed 75%
+       22:   57:void hashmapq_free (hashmapq_t * h) {
+       22:   58:    assert (h);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 22
+call    2 never executed
+       22:   59:    hashmapq_clear (h);
+call    0 returned 22
+       22:   60:}
+        -:   61:
+function hashmapq_freeall called 22 returned 100% blocks executed 75%
+       22:   62:void hashmapq_freeall (hashmapq_t * h) {
+       22:   63:    assert (h);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 22
+call    2 never executed
+       22:   64:    hashmapq_free (h);
+call    0 returned 22
+       22:   65:    free ((h) - 1);
+       22:   66:}
+        -:   67:
+function hashmapq_get called 11 returned 100% blocks executed 81%
+       11:   68:void * hashmapq_get (hashmapq_t * h, const void * key) {
+        -:   69:    unsigned int slot;
+        -:   70:    hash_node_t * n;
+       11:   71:    if (0 == hashmapq_count (h) || !key)
+call    0 returned 11
+branch  1 taken 10 (fallthrough)
+branch  2 taken 1
+branch  3 taken 0 (fallthrough)
+branch  4 taken 10
+        1:   72:        return NULL;
+       10:   73:    slot = h->hash (key);
+call    0 returned 10
+       10:   74:    n = &((hash_node_t *) h->array)[slot % h->size];
+        -:   75:    int new_slot;
+        -:   76:    int i;
+       14:   77:    for (i = 0;; i++) {
+       14:   78:        new_slot = (slot + (i / 2) + (i * i) / 2) % h->size;
+       14:   79:        n = &((hash_node_t *) h->array)[new_slot];
+       14:   80:        if (!n->key)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 14
+    #####:   81:            break;
+       14:   82:        if (n->key == (void *) &__tombstone)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 14
+    #####:   83:            continue;
+       14:   84:        if (0 == h->compare (key, n->key)) {
+call    0 returned 14
+branch  1 taken 10 (fallthrough)
+branch  2 taken 4
+       10:   85:            return (void *) n->val;
+        -:   86:        }
+        4:   87:    }
+    #####:   88:    return NULL;
+        -:   89:}
+        -:   90:
+function hashmapq_contains_key called 1 returned 100% blocks executed 100%
+        1:   91:int hashmapq_contains_key (hashmapq_t * h, const void * key) {
+        1:   92:    return (NULL != hashmapq_get (h, key));
+call    0 returned 1
+        -:   93:}
+        -:   94:
+function hashmapq_remove_entry called 33 returned 100% blocks executed 93%
+       33:   95:void hashmapq_remove_entry (hashmapq_t * h, hash_entry_t * entry, const void * k) {
+        -:   96:    hash_node_t * n;
+        -:   97:    int slot;
+        -:   98:    int i;
+       33:   99:    slot = h->hash (k);
+call    0 returned 33
+       33:  100:    n = &((hash_node_t *) h->array)[slot % h->size];
+       33:  101:    if (!n->key)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 33
+    #####:  102:        goto notfound;
+       37:  103:    for (i = 0;; i++) {
+        -:  104:        int new_slot;
+       37:  105:        new_slot = (slot + (i / 2) + (i * i) / 2) % h->size;
+       37:  106:        n = &((hash_node_t *) h->array)[new_slot];
+       37:  107:        if (!n->key)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 36
+        1:  108:            goto notfound;
+       36:  109:        if (n->key == (void *) &__tombstone)
+branch  0 taken 2 (fallthrough)
+branch  1 taken 34
+        2:  110:            continue;
+       34:  111:        if (0 == h->compare (k, n->key)) {
+call    0 returned 34
+branch  1 taken 32 (fallthrough)
+branch  2 taken 2
+       32:  112:            n->key = &__tombstone;
+       32:  113:            h->count--;
+       32:  114:            entry->key = n->key;
+       32:  115:            entry->val = n->val;
+       65:  116:            return;
+        -:  117:        }
+        4:  118:    }
+        -:  119:notfound :
+        1:  120:    entry->key = NULL;
+        1:  121:    entry->val = NULL;
+        -:  122:}
+        -:  123:
+function hashmapq_remove called 33 returned 100% blocks executed 100%
+       33:  124:void * hashmapq_remove (hashmapq_t * h, const void * key) {
+        -:  125:    hash_entry_t entry;
+       33:  126:    hashmapq_remove_entry (h, & entry, key);
+call    0 returned 33
+       33:  127:    return (void *) entry.val;
+        -:  128:}
+        -:  129:
+function hashmapq_put called 118 returned 100% blocks executed 94%
+      118:  130:void * hashmapq_put (hashmapq_t * h, void * k, void * v) {
+        -:  131:    hash_node_t * n;
+        -:  132:    int slot;
+      118:  133:    if (!k || !v)
+branch  0 taken 118 (fallthrough)
+branch  1 taken 0
+branch  2 taken 0 (fallthrough)
+branch  3 taken 118
+    #####:  134:        return NULL;
+      118:  135:    __ensurecapacity (h);
+call    0 returned 118
+      118:  136:    slot = h->hash (k);
+call    0 returned 118
+        -:  137:    int new_slot;
+        -:  138:    int i;
+      144:  139:    for (i = 0;; i++) {
+      144:  140:        new_slot = (slot + (i / 2) + (i * i) / 2) % h->size;
+      144:  141:        n = &((hash_node_t *) h->array)[new_slot];
+      144:  142:        if (!n->key || n->key == &__tombstone) {
+branch  0 taken 27 (fallthrough)
+branch  1 taken 117
+branch  2 taken 0 (fallthrough)
+branch  3 taken 27
+      117:  143:            if (!n->key) {
+branch  0 taken 117 (fallthrough)
+branch  1 taken 0
+      117:  144:                h->slots_used += 1;
+      117:  145:                h->count++;
+        -:  146:            }
+      117:  147:            n->key = k;
+      117:  148:            n->val = v;
+      117:  149:            return NULL;
+        -:  150:        }
+       27:  151:        else if (0 == h->compare (k, n->key)) {
+call    0 returned 27
+branch  1 taken 1 (fallthrough)
+branch  2 taken 26
+        -:  152:            void * old;
+        1:  153:            old = n->val;
+        1:  154:            n->val = v;
+        1:  155:            return old;
+        -:  156:        }
+       26:  157:    }
+        -:  158:}
+        -:  159:
+function hashmapq_put_entry called 1 returned 100% blocks executed 100%
+        1:  160:void hashmapq_put_entry (hashmapq_t * h, hash_entry_t * entry) {
+        1:  161:    hashmapq_put (h, entry -> key, entry -> val);
+call    0 returned 1
+        1:  162:}
+        -:  163:
+function hashmapq_increase_capacity called 14 returned 100% blocks executed 100%
+       14:  164:void hashmapq_increase_capacity (hashmapq_t * h) {
+        -:  165:    hash_node_t * array_old;
+        -:  166:    int ii, asize_old;
+       14:  167:    array_old = h->array;
+       14:  168:    asize_old = h->size;
+       14:  169:    h->count = 0;
+       14:  170:    h->slots_used = 0;
+       14:  171:    h->size <<= 1;
+       14:  172:    h->array = calloc (h->size, sizeof (hash_node_t));
+      115:  173:    for (ii = 0; ii < asize_old; ii++) {
+branch  0 taken 101
+branch  1 taken 14 (fallthrough)
+        -:  174:        hash_node_t * n;
+      101:  175:        n = &((hash_node_t *) array_old)[ii];
+      101:  176:        if (!n->key || n->key == &__tombstone)
+branch  0 taken 50 (fallthrough)
+branch  1 taken 51
+branch  2 taken 0 (fallthrough)
+branch  3 taken 50
+       51:  177:            continue;
+       50:  178:        hashmapq_put (h, n -> key, n -> val);
+call    0 returned 50
+        -:  179:    }
+       14:  180:    free (array_old);
+       14:  181:}
+        -:  182:
+function __ensurecapacity called 118 returned 100% blocks executed 100%
+      118:  183:static void __ensurecapacity (hashmapq_t * h) {
+      118:  184:    if ((float) h->slots_used / h->size < SPACERATIO) {
+branch  0 taken 105 (fallthrough)
+branch  1 taken 13
+      223:  185:        return;
+        -:  186:    }
+        -:  187:    else {
+       13:  188:        hashmapq_increase_capacity (h);
+call    0 returned 13
+        -:  189:    }
+        -:  190:}
+        -:  191:
+function hashmapq_iterator_peek called 2 returned 100% blocks executed 88%
+        2:  192:void * hashmapq_iterator_peek (hashmapq_t * h, hashmapq_iterator_t * iter) {
+       18:  193:    for (; iter->cur < h->size; iter->cur++) {
+branch  0 taken 16
+branch  1 taken 2 (fallthrough)
+        -:  194:        hash_node_t * n;
+       16:  195:        n = &((hash_node_t *) h->array)[iter->cur];
+       16:  196:        if (n->key && n->key != &__tombstone)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 15
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1
+    #####:  197:            return n->key;
+        -:  198:    }
+        2:  199:    return NULL;
+        -:  200:}
+        -:  201:
+function hashmapq_iterator_peek_value called 0 returned 0% blocks executed 0%
+    #####:  202:void * hashmapq_iterator_peek_value (hashmapq_t * h, hashmapq_iterator_t * iter) {
+    #####:  203:    return hashmapq_get (h, hashmapq_iterator_peek (h, iter));
+call    0 never executed
+call    1 never executed
+        -:  204:}
+        -:  205:
+function hashmapq_iterator_has_next called 2 returned 100% blocks executed 100%
+        2:  206:int hashmapq_iterator_has_next (hashmapq_t * h, hashmapq_iterator_t * iter) {
+        2:  207:    return NULL != hashmapq_iterator_peek (h, iter);
+call    0 returned 2
+        -:  208:}
+        -:  209:
+function hashmapq_iterator_next_value called 0 returned 0% blocks executed 0%
+    #####:  210:void * hashmapq_iterator_next_value (hashmapq_t * h, hashmapq_iterator_t * iter) {
+        -:  211:    void * k;
+    #####:  212:    k = hashmapq_iterator_next (h, iter);
+call    0 never executed
+    #####:  213:    if (!k)
+branch  0 never executed
+branch  1 never executed
+    #####:  214:        return NULL;
+    #####:  215:    return hashmapq_get (h, k);
+call    0 never executed
+        -:  216:}
+        -:  217:
+function hashmapq_iterator_next called 21 returned 100% blocks executed 90%
+       21:  218:void * hashmapq_iterator_next (hashmapq_t * h, hashmapq_iterator_t * iter) {
+        -:  219:    hash_node_t * n;
+       21:  220:    assert (iter);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 21
+call    2 never executed
+      118:  221:    for (; iter->cur < h->size; iter->cur++) {
+branch  0 taken 56
+branch  1 taken 3 (fallthrough)
+       56:  222:        n = &((hash_node_t *) h->array)[iter->cur];
+       56:  223:        if (!n->key || n->key == &__tombstone)
+branch  0 taken 18 (fallthrough)
+branch  1 taken 38
+branch  2 taken 0 (fallthrough)
+branch  3 taken 18
+       38:  224:            continue;
+       18:  225:        iter->cur++;
+       18:  226:        return n->key;
+        -:  227:    }
+        3:  228:    return NULL;
+        -:  229:}
+        -:  230:
+function hashmapq_iterator called 5 returned 100% blocks executed 100%
+        5:  231:void hashmapq_iterator (hashmapq_t * h __attribute__ ((__unused__)), hashmapq_iterator_t * iter) {
+        5:  232:    iter->cur = 0;
+        5:  233:}
+        -:  234:

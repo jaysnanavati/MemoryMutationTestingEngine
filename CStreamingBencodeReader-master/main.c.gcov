@@ -1,0 +1,157 @@
+        -:    0:Source:main.c
+        -:    0:Programs:2
+        -:    1:
+        -:    2:
+        -:    3:/* This is auto-generated code. Edit at your own peril. */
+        -:    4:#include <stdio.h>
+        -:    5:#include "CuTest.h"
+        -:    6:
+        -:    7:
+        -:    8:extern void TestBencodeTest_add_sibling_adds_sibling(CuTest*);
+        -:    9:extern void TestBencodeTest_add_child_adds_child(CuTest*);
+        -:   10:extern void TestBencode_fail_if_depth_not_sufficient(CuTest*);
+        -:   11:extern void TestBencodeIntValue(CuTest*);
+        -:   12:extern void TestBencodeIntValue2(CuTest*);
+        -:   13:extern void TestBencodeIntValueLarge(CuTest*);
+        -:   14:extern void TestBencodeIsIntEmpty(CuTest*);
+        -:   15:extern void TestBencodeStringValue(CuTest*);
+        -:   16:extern void TestBencodeStringValue2(CuTest*);
+        -:   17:extern void TestBencodeStringHandlesNonAscii0(CuTest*);
+        -:   18:extern void TestBencodeStringValueWithColon(CuTest*);
+        -:   19:extern void TestBencodeIsList(CuTest*);
+        -:   20:extern void TestBencodeListGetNext(CuTest*);
+        -:   21:extern void TestBencodeListInListWithValue(CuTest*);
+        -:   22:extern void TestBencodeListDoesntHasNextWhenEmpty(CuTest*);
+        -:   23:extern void TestBencodeEmptyListInListWontGetNextIfEmpty(CuTest*);
+        -:   24:extern void TestBencodeEmptyListInListWontGetNextTwiceIfEmpty(CuTest*);
+        -:   25:extern void TestBencodeListGetNextTwiceWhereOnlyOneAvailable(CuTest*);
+        -:   26:extern void TestBencodeListGetNextTwice(CuTest*);
+        -:   27:extern void TestBencodeDictGetNext(CuTest*);
+        -:   28:extern void TestBencodeDictWontGetNextIfEmpty(CuTest*);
+        -:   29:extern void TestBencodeDictGetNextTwice(CuTest*);
+        -:   30:extern void TestBencodeDictGetNextTwiceOnlyIfSecondKeyValid(CuTest*);
+        -:   31:extern void TestBencodeDictGetNextInnerList(CuTest*);
+        -:   32:extern void TestBencodeDictInnerList(CuTest*);
+        -:   33:extern void TestBencodeStringValueIsZeroLength(CuTest*);
+        -:   34:extern void TestBencodeListNextGetsCalled(CuTest*);
+        -:   35:extern void TestBencodeDictNextGetsCalled(CuTest*);
+        -:   36:extern void TestBencodeListLeaveGetsCalled(CuTest*);
+        -:   37:extern void TestBencodeDictLeaveGetsCalled(CuTest*);
+        -:   38:
+        -:   39:
+function RunAllTests called 1 returned 100% blocks executed 100%
+        1:   40:void RunAllTests(void) 
+        -:   41:{
+        1:   42:    CuString *output = CuStringNew();
+call    0 returned 1
+        1:   43:    CuSuite* suite = CuSuiteNew();
+call    0 returned 1
+        -:   44:
+        -:   45:
+        1:   46:    SUITE_ADD_TEST(suite, TestBencodeTest_add_sibling_adds_sibling);
+call    0 returned 1
+call    1 returned 1
+        1:   47:    SUITE_ADD_TEST(suite, TestBencodeTest_add_child_adds_child);
+call    0 returned 1
+call    1 returned 1
+        1:   48:    SUITE_ADD_TEST(suite, TestBencode_fail_if_depth_not_sufficient);
+call    0 returned 1
+call    1 returned 1
+        1:   49:    SUITE_ADD_TEST(suite, TestBencodeIntValue);
+call    0 returned 1
+call    1 returned 1
+        1:   50:    SUITE_ADD_TEST(suite, TestBencodeIntValue2);
+call    0 returned 1
+call    1 returned 1
+        1:   51:    SUITE_ADD_TEST(suite, TestBencodeIntValueLarge);
+call    0 returned 1
+call    1 returned 1
+        1:   52:    SUITE_ADD_TEST(suite, TestBencodeIsIntEmpty);
+call    0 returned 1
+call    1 returned 1
+        1:   53:    SUITE_ADD_TEST(suite, TestBencodeStringValue);
+call    0 returned 1
+call    1 returned 1
+        1:   54:    SUITE_ADD_TEST(suite, TestBencodeStringValue2);
+call    0 returned 1
+call    1 returned 1
+        1:   55:    SUITE_ADD_TEST(suite, TestBencodeStringHandlesNonAscii0);
+call    0 returned 1
+call    1 returned 1
+        1:   56:    SUITE_ADD_TEST(suite, TestBencodeStringValueWithColon);
+call    0 returned 1
+call    1 returned 1
+        1:   57:    SUITE_ADD_TEST(suite, TestBencodeIsList);
+call    0 returned 1
+call    1 returned 1
+        1:   58:    SUITE_ADD_TEST(suite, TestBencodeListGetNext);
+call    0 returned 1
+call    1 returned 1
+        1:   59:    SUITE_ADD_TEST(suite, TestBencodeListInListWithValue);
+call    0 returned 1
+call    1 returned 1
+        1:   60:    SUITE_ADD_TEST(suite, TestBencodeListDoesntHasNextWhenEmpty);
+call    0 returned 1
+call    1 returned 1
+        1:   61:    SUITE_ADD_TEST(suite, TestBencodeEmptyListInListWontGetNextIfEmpty);
+call    0 returned 1
+call    1 returned 1
+        1:   62:    SUITE_ADD_TEST(suite, TestBencodeEmptyListInListWontGetNextTwiceIfEmpty);
+call    0 returned 1
+call    1 returned 1
+        1:   63:    SUITE_ADD_TEST(suite, TestBencodeListGetNextTwiceWhereOnlyOneAvailable);
+call    0 returned 1
+call    1 returned 1
+        1:   64:    SUITE_ADD_TEST(suite, TestBencodeListGetNextTwice);
+call    0 returned 1
+call    1 returned 1
+        1:   65:    SUITE_ADD_TEST(suite, TestBencodeDictGetNext);
+call    0 returned 1
+call    1 returned 1
+        1:   66:    SUITE_ADD_TEST(suite, TestBencodeDictWontGetNextIfEmpty);
+call    0 returned 1
+call    1 returned 1
+        1:   67:    SUITE_ADD_TEST(suite, TestBencodeDictGetNextTwice);
+call    0 returned 1
+call    1 returned 1
+        1:   68:    SUITE_ADD_TEST(suite, TestBencodeDictGetNextTwiceOnlyIfSecondKeyValid);
+call    0 returned 1
+call    1 returned 1
+        1:   69:    SUITE_ADD_TEST(suite, TestBencodeDictGetNextInnerList);
+call    0 returned 1
+call    1 returned 1
+        1:   70:    SUITE_ADD_TEST(suite, TestBencodeDictInnerList);
+call    0 returned 1
+call    1 returned 1
+        1:   71:    SUITE_ADD_TEST(suite, TestBencodeStringValueIsZeroLength);
+call    0 returned 1
+call    1 returned 1
+        1:   72:    SUITE_ADD_TEST(suite, TestBencodeListNextGetsCalled);
+call    0 returned 1
+call    1 returned 1
+        1:   73:    SUITE_ADD_TEST(suite, TestBencodeDictNextGetsCalled);
+call    0 returned 1
+call    1 returned 1
+        1:   74:    SUITE_ADD_TEST(suite, TestBencodeListLeaveGetsCalled);
+call    0 returned 1
+call    1 returned 1
+        1:   75:    SUITE_ADD_TEST(suite, TestBencodeDictLeaveGetsCalled);
+call    0 returned 1
+call    1 returned 1
+        -:   76:
+        1:   77:    CuSuiteRun(suite);
+call    0 returned 1
+        1:   78:    CuSuiteDetails(suite, output);
+call    0 returned 1
+        1:   79:    printf("%s\n", output->buffer);
+call    0 returned 1
+        1:   80:}
+        -:   81:
+function main called 1 returned 100% blocks executed 100%
+        1:   82:int main()
+        -:   83:{
+        1:   84:    RunAllTests();
+call    0 returned 1
+        1:   85:    return 0;
+        -:   86:}
+        -:   87:

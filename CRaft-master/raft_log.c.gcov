@@ -1,0 +1,264 @@
+        -:    0:Source:raft_log.c
+        -:    0:Programs:4
+        -:    1:
+        -:    2:/**
+        -:    3: * Copyright (c) 2013, Willem-Hendrik Thiart
+        -:    4: * Use of this source code is governed by a BSD-style license that can be
+        -:    5: * found in the LICENSE file. 
+        -:    6: *
+        -:    7: * @file
+        -:    8: * @brief ADT for managing Raft log entries (aka entrys)
+        -:    9: * @author Willem Thiart himself@willemthiart.com
+        -:   10: * @version 0.1
+        -:   11: */
+        -:   12:
+        -:   13:#include <stdlib.h>
+        -:   14:#include <string.h>
+        -:   15:#include <stdio.h>
+        -:   16:#include <assert.h>
+        -:   17:
+        -:   18:#include "raft.h"
+        -:   19:#include "raft_log.h"
+        -:   20:
+        -:   21:#define INITIAL_CAPACITY 10
+        -:   22:#define in(x) ((log_private_t*)x)
+        -:   23:
+        -:   24:typedef struct
+        -:   25:{
+        -:   26:    /* size of array */
+        -:   27:    int size;              
+        -:   28:
+        -:   29:    /* the amount of elements in the array */
+        -:   30:    int count;             
+        -:   31:
+        -:   32:    /* position of the queue */
+        -:   33:    int front, back;       
+        -:   34:
+        -:   35:    /* we compact the log, and thus need to increment the base idx */
+        -:   36:    int base_log_idx;
+        -:   37:
+        -:   38:    raft_entry_t* entries;
+        -:   39:} log_private_t;
+        -:   40:
+function __ensurecapacity called 40 returned 100% blocks executed 33%
+       40:   41:static void __ensurecapacity(
+        -:   42:    log_private_t * me
+        -:   43:)
+        -:   44:{
+        -:   45:    int i, j;
+        -:   46:    raft_entry_t *temp;
+        -:   47:
+       40:   48:    if (me->count < me->size)
+branch  0 taken 40 (fallthrough)
+branch  1 taken 0
+       80:   49:        return;
+        -:   50:
+    #####:   51:    temp = calloc(1,sizeof(raft_entry_t) * me->size * 2);
+        -:   52:
+    #####:   53:    for (i = 0, j = me->front; i < me->count; i++, j++)
+branch  0 never executed
+branch  1 never executed
+        -:   54:    {
+    #####:   55:        if (j == me->size)
+branch  0 never executed
+branch  1 never executed
+    #####:   56:            j = 0;
+    #####:   57:        memcpy(&temp[i], &me->entries[j], sizeof(raft_entry_t));
+        -:   58:    }
+        -:   59:
+    #####:   60:    me->size *= 2;
+    #####:   61:    me->entries = temp;
+    #####:   62:    me->front = 0;
+    #####:   63:    me->back = me->count;
+        -:   64:
+        -:   65:    /* clean up old entries */
+    #####:   66:    free(me->entries);
+        -:   67:}
+        -:   68:
+function log_new called 71 returned 100% blocks executed 100%
+       71:   69:log_t* log_new()
+        -:   70:{
+        -:   71:    log_private_t* me;
+        -:   72:
+       71:   73:    me = calloc(1,sizeof(log_private_t));
+       71:   74:    me->size = INITIAL_CAPACITY;
+       71:   75:    me->count = 0;
+       71:   76:    me->back = in(me)->front = 0;
+       71:   77:    me->entries = calloc(1,sizeof(raft_entry_t) * me->size);
+       71:   78:    return (void*)me;
+        -:   79:}
+        -:   80:
+        -:   81:/**
+        -:   82: * Add entry to log.
+        -:   83: * Don't add entry if we've already added this entry (based off ID)
+        -:   84: * Don't add entries with ID=0 
+        -:   85: * @return 0 if unsucessful; 1 otherwise */
+function log_append_entry called 41 returned 100% blocks executed 100%
+       41:   86:int log_append_entry(log_t* me_, raft_entry_t* c)
+        -:   87:{
+       41:   88:    log_private_t* me = (void*)me_;
+        -:   89:
+       41:   90:    if (0 == c->id)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 40
+        1:   91:        return 0;
+        -:   92:
+       40:   93:    __ensurecapacity(me);
+call    0 returned 40
+        -:   94:
+        -:   95://    if (hashmap_get(me->log_map, (void*)c->id+1))
+        -:   96://        return 0;
+        -:   97:
+       40:   98:    memcpy(&me->entries[me->back],c,sizeof(raft_entry_t));
+       40:   99:    me->entries[me->back].num_nodes = 0;
+       40:  100:    me->count++;
+       40:  101:    me->back++;
+       40:  102:    return 1;
+        -:  103:}
+        -:  104:
+function log_get_from_idx called 76 returned 100% blocks executed 100%
+       76:  105:raft_entry_t* log_get_from_idx(log_t* me_, int idx)
+        -:  106:{
+       76:  107:    log_private_t* me = (void*)me_;
+        -:  108:    int i;
+        -:  109:
+       76:  110:    if (me->base_log_idx + me->count < idx || idx < me->base_log_idx)
+branch  0 taken 36 (fallthrough)
+branch  1 taken 40
+branch  2 taken 0 (fallthrough)
+branch  3 taken 36
+       40:  111:        return NULL;
+        -:  112:
+        -:  113:    /* idx starts at 1 */
+       36:  114:    idx -= 1;
+       36:  115:    i = (me->front + idx - me->base_log_idx) % me->size;
+       36:  116:    return &me->entries[i];
+        -:  117:}
+        -:  118:
+function log_count called 39 returned 100% blocks executed 100%
+       39:  119:int log_count(log_t* me_)
+        -:  120:{
+       39:  121:    log_private_t* me = (void*)me_;
+       39:  122:    return me->count;
+        -:  123:}
+        -:  124:
+        -:  125:/**
+        -:  126: * Delete all logs from this log onwards */
+function log_delete called 6 returned 100% blocks executed 100%
+        6:  127:void log_delete(log_t* me_, int idx)
+        -:  128:{
+        -:  129:   
+        6:  130: log_private_t* me = (void*)me_;
+        -:  131:    int end, i;
+        -:  132:    
+        -:  133:     const void *elem;
+        -:  134:
+        -:  135:    /* idx starts at 1 */
+        6:  136:    idx -= 1;
+        6:  137:    idx -= me->base_log_idx;
+        -:  138:
+       13:  139:    for (end = log_count(me_); idx<end; idx++)
+call    0 returned 6
+branch  1 taken 7
+branch  2 taken 6 (fallthrough)
+        -:  140:    {
+        7:  141:        me->back--;
+        7:  142:        me->count--;
+        -:  143:    }
+        -:  144:
+        -:  145:#if 0
+        -:  146:   
+        -:  147:    if (arrayqueue_is_empty(me))
+        -:  148:        return NULL;
+        -:  149:
+        -:  150://    __checkwrapping(me);
+        -:  151:    in(me)->back--;
+        -:  152:    in(me)->count--;
+        -:  153:    if (-1 == in(me)->back)
+        -:  154:        in(me)->back = in(me)->size;
+        -:  155:    elem = me->entries[in(me)->back];
+        -:  156:
+        -:  157:    return (void *) elem;
+        -:  158:#endif
+        6:  159:}
+        -:  160:
+        -:  161:/**
+        -:  162: * Remove oldest entry
+        -:  163: * @return oldest entry */
+function log_poll called 0 returned 0% blocks executed 0%
+    #####:  164:void *log_poll(log_t * me_)
+        -:  165:{
+    #####:  166:    log_private_t* me = (void*)me_;
+        -:  167:    const void *elem;
+        -:  168:
+    #####:  169:    if (0 == log_count(me_))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  170:        return NULL;
+    #####:  171:    elem = &me->entries[me->front];
+    #####:  172:    me->front++;
+    #####:  173:    me->count--;
+    #####:  174:    me->base_log_idx++;
+    #####:  175:    return (void *) elem;
+        -:  176:}
+        -:  177:
+        -:  178:/*
+        -:  179: * @return youngest entry */
+function log_peektail called 10 returned 100% blocks executed 86%
+       10:  180:raft_entry_t *log_peektail(log_t * me_)
+        -:  181:{
+       10:  182:    log_private_t* me = (void*)me_;
+        -:  183:    const void *elem;
+        -:  184:    int i;
+        -:  185:
+       10:  186:    if (0 == log_count(me_))
+call    0 returned 10
+branch  1 taken 7 (fallthrough)
+branch  2 taken 3
+        7:  187:        return NULL;
+        -:  188:
+        3:  189:    if (0 == me->back)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 3
+    #####:  190:        return &me->entries[me->size-1];
+        -:  191:    else
+        3:  192:        return &me->entries[me->back-1];
+        -:  193:}
+        -:  194:
+        -:  195:/**
+        -:  196: * Empty the queue. */
+function log_empty called 0 returned 0% blocks executed 0%
+    #####:  197:void log_empty(log_t * me_)
+        -:  198:{
+    #####:  199:    log_private_t* me = (void*)me_;
+        -:  200:
+    #####:  201:    me->front = 0;
+    #####:  202:    me->back = 0;
+    #####:  203:    me->count = 0;
+    #####:  204:}
+        -:  205:
+function log_free called 0 returned 0% blocks executed 0%
+    #####:  206:void log_free(log_t * me_)
+        -:  207:{
+    #####:  208:    log_private_t* me = (void*)me_;
+        -:  209:
+    #####:  210:    free(me->entries);
+    #####:  211:    free(me);
+    #####:  212:}
+        -:  213:
+function log_mark_node_has_committed called 18 returned 100% blocks executed 100%
+       18:  214:void log_mark_node_has_committed(log_t* me_, int idx)
+        -:  215:{
+       18:  216:    log_private_t* me = (void*)me_;
+        -:  217:    raft_entry_t* e;
+        -:  218:
+       18:  219:    if ((e = log_get_from_idx(me_,idx)))
+call    0 returned 18
+branch  1 taken 6 (fallthrough)
+branch  2 taken 12
+        -:  220:    {
+        6:  221:        e->num_nodes += 1;
+        -:  222:    }
+       18:  223:}
+        -:  224:

@@ -202,6 +202,16 @@ void generate_derived_stats(){
     nodeset = result->nodesetval;
     for (i=0; i < nodeset->nodeNr; i++) {
       xmlNodePtr mutation_operator = nodeset->nodeTab[i];
+      //Average damage
+      char* damage_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"damage_raw");
+      if(damage_count!=NULL){
+	int rdc = atoi(damage_count);
+	char*val = double_to_char_heap((double)(rdc/100.0)/(double)total_infection_count);
+	xmlSetProp(mutation_operator,(xmlChar*)"damage",BAD_CAST val);
+	xmlFree(damage_count);
+	free(val);
+      }
+      
       //Fragilty:total number of tests that killed it vs total number of tests that were run
       char* killed_by_test_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_by_test_count");
       if(killed_by_test_count!=NULL){

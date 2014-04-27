@@ -1,0 +1,724 @@
+        -:    0:Source:test_quadratic_probing_hashmap.c
+        -:    0:Programs:3
+        -:    1:#include <stdbool.h>
+        -:    2:#include <assert.h>
+        -:    3:#include <setjmp.h>
+        -:    4:#include <stdlib.h>
+        -:    5:#include <stdio.h>
+        -:    6:#include <string.h>
+        -:    7:#include "CuTest.h"
+        -:    8:
+        -:    9:#include "quadratic_probing_hashmap.h"
+        -:   10:
+function __uint_hash called 161 returned 100% blocks executed 75%
+      161:   11:static unsigned long __uint_hash(
+        -:   12:    const void *e1
+        -:   13:)
+        -:   14:{
+      161:   15:    const long i1 = (unsigned long) e1;
+        -:   16:
+      161:   17:    assert(i1 >= 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 161
+call    2 never executed
+      161:   18:    return i1;
+        -:   19:}
+        -:   20:
+function __uint_compare called 75 returned 100% blocks executed 100%
+       75:   21:static long __uint_compare(
+        -:   22:    const void *e1,
+        -:   23:    const void *e2
+        -:   24:)
+        -:   25:{
+       75:   26:    const long i1 = (unsigned long) e1, i2 = (unsigned long) e2;
+        -:   27:
+        -:   28://      return !(*i1 == *i2); 
+       75:   29:    return i1 - i2;
+        -:   30:}
+        -:   31:
+function TesthashmapqQuadratic_New called 1 returned 100% blocks executed 100%
+        1:   32:void TesthashmapqQuadratic_New(
+        -:   33:    CuTest * tc
+        -:   34:)
+        -:   35:{
+        -:   36:    hashmapq_t *hm;
+        -:   37:
+        1:   38:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:   39:
+        1:   40:    CuAssertTrue(tc, 0 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:   41:    CuAssertTrue(tc, 8 == hashmapq_size(hm));
+call    0 returned 1
+call    1 returned 1
+        1:   42:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:   43:}
+        -:   44:
+function TesthashmapqQuadratic_Put called 1 returned 100% blocks executed 100%
+        1:   45:void TesthashmapqQuadratic_Put(
+        -:   46:    CuTest * tc
+        -:   47:)
+        -:   48:{
+        -:   49:    hashmapq_t *hm;
+        -:   50:
+        1:   51:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:   52:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        -:   53:
+        1:   54:    CuAssertTrue(tc, 1 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:   55:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:   56:}
+        -:   57:
+function TesthashmapqQuadratic_PutEnsuresCapacity called 1 returned 100% blocks executed 100%
+        1:   58:void TesthashmapqQuadratic_PutEnsuresCapacity(
+        -:   59:    CuTest * tc
+        -:   60:)
+        -:   61:{
+        -:   62:    hashmapq_t *hm;
+        -:   63:
+        1:   64:    hm = hashmapq_new(__uint_hash, __uint_compare, 1);
+call    0 returned 1
+        1:   65:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:   66:    hashmapq_put(hm, (void *) 51, (void *) 92);
+call    0 returned 1
+        -:   67:
+        1:   68:    CuAssertTrue(tc, 2 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:   69:    CuAssertTrue(tc, 2 == hashmapq_size(hm));
+call    0 returned 1
+call    1 returned 1
+        1:   70:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:   71:}
+        -:   72:
+function TesthashmapqQuadratic_PutHandlesCollision called 1 returned 100% blocks executed 100%
+        1:   73:void TesthashmapqQuadratic_PutHandlesCollision(
+        -:   74:    CuTest * tc
+        -:   75:)
+        -:   76:{
+        -:   77:    hashmapq_t *hm;
+        -:   78:    unsigned long val;
+        -:   79:
+        1:   80:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:   81:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:   82:    hashmapq_put(hm, (void *) 5, (void *) 93);
+call    0 returned 1
+        -:   83:
+        1:   84:    CuAssertTrue(tc, 2 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        -:   85:
+        1:   86:    val = (unsigned long) hashmapq_get(hm, (void *) 5);
+call    0 returned 1
+        1:   87:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:   88:    CuAssertTrue(tc, val == 93);
+call    0 returned 1
+        -:   89:
+        1:   90:    val = (unsigned long) hashmapq_get(hm, (void *) 1);
+call    0 returned 1
+        1:   91:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:   92:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        1:   93:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:   94:}
+        -:   95:
+function TesthashmapqQuadratic_GetHandlesCollisionByTraversingChain called 1 returned 100% blocks executed 100%
+        1:   96:void TesthashmapqQuadratic_GetHandlesCollisionByTraversingChain(
+        -:   97:    CuTest * tc
+        -:   98:)
+        -:   99:{
+        -:  100:    hashmapq_t *hm;
+        -:  101:    unsigned long val;
+        -:  102:
+        1:  103:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:  104:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  105:    hashmapq_put(hm, (void *) 5, (void *) 93);
+call    0 returned 1
+        -:  106:
+        1:  107:    CuAssertTrue(tc, 2 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        -:  108:
+        1:  109:    val = (unsigned long) hashmapq_get(hm, (void *) 5);
+call    0 returned 1
+        1:  110:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  111:    CuAssertTrue(tc, val == 93);
+call    0 returned 1
+        1:  112:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  113:}
+        -:  114:
+function TesthashmapqQuadratic_RemoveReturnsNullIfMissingAndTraversesChain called 1 returned 100% blocks executed 100%
+        1:  115:void TesthashmapqQuadratic_RemoveReturnsNullIfMissingAndTraversesChain(
+        -:  116:    CuTest * tc
+        -:  117:)
+        -:  118:{
+        -:  119:    hashmapq_t *hm;
+        -:  120:    unsigned long val;
+        -:  121:
+        1:  122:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:  123:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        -:  124:
+        1:  125:    val = (unsigned long) hashmapq_remove(hm, (void *) 5);
+call    0 returned 1
+        1:  126:    CuAssertTrue(tc, 0 == val);
+call    0 returned 1
+        -:  127:
+        1:  128:    val = (unsigned long) hashmapq_remove(hm, (void *) 1);
+call    0 returned 1
+        1:  129:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  130:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        -:  131:
+        1:  132:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  133:}
+        -:  134:
+function TesthashmapqQuadratic_RemoveHandlesCollision called 1 returned 100% blocks executed 100%
+        1:  135:void TesthashmapqQuadratic_RemoveHandlesCollision(
+        -:  136:    CuTest * tc
+        -:  137:)
+        -:  138:{
+        -:  139:    hashmapq_t *hm;
+        -:  140:    unsigned long val;
+        -:  141:
+        1:  142:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:  143:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  144:    hashmapq_put(hm, (void *) 5, (void *) 93);
+call    0 returned 1
+        1:  145:    hashmapq_put(hm, (void *) 9, (void *) 94);
+call    0 returned 1
+        -:  146:
+        1:  147:    val = (unsigned long) hashmapq_remove(hm, (void *) 5);
+call    0 returned 1
+        1:  148:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  149:    CuAssertTrue(tc, val == 93);
+call    0 returned 1
+        1:  150:    CuAssertTrue(tc, 2 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        -:  151:
+        1:  152:    val = (unsigned long) hashmapq_remove(hm, (void *) 1);
+call    0 returned 1
+        1:  153:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  154:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        1:  155:    CuAssertTrue(tc, 1 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        -:  156:
+        1:  157:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  158:}
+        -:  159:
+function TesthashmapqQuadratic_PutEntry called 1 returned 100% blocks executed 100%
+        1:  160:void TesthashmapqQuadratic_PutEntry(
+        -:  161:    CuTest * tc
+        -:  162:)
+        -:  163:{
+        -:  164:    hashmapq_t *hm;
+        -:  165:    hash_entry_t entry;
+        -:  166:
+        1:  167:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  168:    entry.key = (void *) 50;
+        1:  169:    entry.val = (void *) 92;
+        1:  170:    hashmapq_put_entry(hm, &entry);
+call    0 returned 1
+        1:  171:    CuAssertTrue(tc, 1 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  172:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  173:}
+        -:  174:
+function TesthashmapqQuadratic_Get called 1 returned 100% blocks executed 100%
+        1:  175:void TesthashmapqQuadratic_Get(
+        -:  176:    CuTest * tc
+        -:  177:)
+        -:  178:{
+        -:  179:    hashmapq_t *hm;
+        -:  180:
+        -:  181:    unsigned long val;
+        -:  182:
+        1:  183:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  184:
+        1:  185:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        -:  186:
+        1:  187:    val = (unsigned long) hashmapq_get(hm, (void *) 50);
+call    0 returned 1
+        -:  188:
+        1:  189:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  190:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        1:  191:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  192:}
+        -:  193:
+function TesthashmapqQuadratic_ContainsKey called 1 returned 100% blocks executed 100%
+        1:  194:void TesthashmapqQuadratic_ContainsKey(
+        -:  195:    CuTest * tc
+        -:  196:)
+        -:  197:{
+        -:  198:    hashmapq_t *hm;
+        -:  199:
+        1:  200:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  201:
+        1:  202:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        -:  203:
+        1:  204:    CuAssertTrue(tc, 1 == hashmapq_contains_key(hm, (void*) 50));
+call    0 returned 1
+call    1 returned 1
+        1:  205:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  206:}
+        -:  207:
+        -:  208:
+function TesthashmapqQuadratic_DoublePut called 1 returned 100% blocks executed 100%
+        1:  209:void TesthashmapqQuadratic_DoublePut(
+        -:  210:    CuTest * tc
+        -:  211:)
+        -:  212:{
+        -:  213:    hashmapq_t *hm;
+        -:  214:
+        -:  215:    unsigned long val;
+        -:  216:
+        1:  217:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  218:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:  219:    hashmapq_put(hm, (void *) 50, (void *) 23);
+call    0 returned 1
+        1:  220:    val = (unsigned long) hashmapq_get(hm, (void *) 50);
+call    0 returned 1
+        1:  221:    CuAssertTrue(tc, val == 23);
+call    0 returned 1
+        1:  222:    CuAssertTrue(tc, 1 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  223:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  224:}
+        -:  225:
+function TesthashmapqQuadratic_Get2 called 1 returned 100% blocks executed 100%
+        1:  226:void TesthashmapqQuadratic_Get2(
+        -:  227:    CuTest * tc
+        -:  228:)
+        -:  229:{
+        -:  230:    hashmapq_t *hm;
+        -:  231:
+        -:  232:    unsigned long val;
+        -:  233:
+        1:  234:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  235:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:  236:    hashmapq_put(hm, (void *) 49, (void *) 91);
+call    0 returned 1
+        1:  237:    hashmapq_put(hm, (void *) 48, (void *) 90);
+call    0 returned 1
+        1:  238:    hashmapq_put(hm, (void *) 47, (void *) 89);
+call    0 returned 1
+        1:  239:    hashmapq_put(hm, (void *) 46, (void *) 88);
+call    0 returned 1
+        1:  240:    hashmapq_put(hm, (void *) 45, (void *) 87);
+call    0 returned 1
+        1:  241:    val = (unsigned long) hashmapq_get(hm, (void *) 48);
+call    0 returned 1
+        1:  242:    CuAssertTrue(tc, val == 90);
+call    0 returned 1
+        1:  243:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  244:}
+        -:  245:
+function TesthashmapqQuadratic_IncreaseCapacityDoesNotBreakhashmapq called 1 returned 100% blocks executed 100%
+        1:  246:void TesthashmapqQuadratic_IncreaseCapacityDoesNotBreakhashmapq(
+        -:  247:    CuTest * tc
+        -:  248:)
+        -:  249:{
+        -:  250:    hashmapq_t *hm;
+        -:  251:
+        -:  252:    unsigned long val;
+        -:  253:
+        1:  254:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:  255:    hashmapq_put(hm, (void *) 1, (void *) 90);
+call    0 returned 1
+        1:  256:    hashmapq_put(hm, (void *) 5, (void *) 91);
+call    0 returned 1
+        1:  257:    hashmapq_put(hm, (void *) 2, (void *) 92);
+call    0 returned 1
+        1:  258:    hashmapq_increase_capacity(hm);
+call    0 returned 1
+        1:  259:    CuAssertTrue(tc, 3 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  260:    val = (unsigned long) hashmapq_get(hm, (void *) 1);
+call    0 returned 1
+        1:  261:    CuAssertTrue(tc, val == 90);
+call    0 returned 1
+        1:  262:    val = (unsigned long) hashmapq_get(hm, (void *) 5);
+call    0 returned 1
+        1:  263:    CuAssertTrue(tc, val == 91);
+call    0 returned 1
+        1:  264:    val = (unsigned long) hashmapq_get(hm, (void *) 2);
+call    0 returned 1
+        1:  265:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        1:  266:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  267:}
+        -:  268:
+function TesthashmapqQuadratic_Remove called 1 returned 100% blocks executed 100%
+        1:  269:void TesthashmapqQuadratic_Remove(
+        -:  270:    CuTest * tc
+        -:  271:)
+        -:  272:{
+        -:  273:    hashmapq_t *hm;
+        -:  274:
+        -:  275:    unsigned long val;
+        -:  276:
+        1:  277:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  278:
+        1:  279:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        -:  280:
+        1:  281:    val = (unsigned long) hashmapq_remove(hm, (void *) 50);
+call    0 returned 1
+        -:  282:
+        1:  283:    CuAssertTrue(tc, 0 != val);
+call    0 returned 1
+        1:  284:    CuAssertTrue(tc, val == 92);
+call    0 returned 1
+        1:  285:    CuAssertTrue(tc, 0 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  286:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  287:}
+        -:  288:
+function TesthashmapqQuadratic_ClearRemovesAll called 1 returned 100% blocks executed 100%
+        1:  289:void TesthashmapqQuadratic_ClearRemovesAll(
+        -:  290:    CuTest * tc
+        -:  291:)
+        -:  292:{
+        -:  293:    hashmapq_t *hm;
+        -:  294:
+        -:  295:    unsigned long val;
+        -:  296:
+        1:  297:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  298:
+        1:  299:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  300:    hashmapq_put(hm, (void *) 2, (void *) 102);
+call    0 returned 1
+        1:  301:    hashmapq_clear(hm);
+call    0 returned 1
+        -:  302:
+        1:  303:    val = (unsigned long) hashmapq_get(hm, (void *) 1);
+call    0 returned 1
+        1:  304:    CuAssertTrue(tc, 0 == val);
+call    0 returned 1
+        1:  305:    CuAssertTrue(tc, 0 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  306:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  307:}
+        -:  308:
+        -:  309:/* The clear function will need to clean the whole chain */
+function TesthashmapqQuadratic_ClearHandlesCollision called 1 returned 100% blocks executed 100%
+        1:  310:void TesthashmapqQuadratic_ClearHandlesCollision(
+        -:  311:    CuTest * tc
+        -:  312:)
+        -:  313:{
+        -:  314:    hashmapq_t *hm;
+        -:  315:
+        1:  316:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        -:  317:
+        1:  318:    hashmapq_put(hm, (void *) 1, (void *) 50);
+call    0 returned 1
+        -:  319:    /* all of the rest cause collisions */
+        1:  320:    hashmapq_put(hm, (void *) 5, (void *) 51);
+call    0 returned 1
+        1:  321:    hashmapq_put(hm, (void *) 9, (void *) 52);
+call    0 returned 1
+        1:  322:    hashmapq_clear(hm);
+call    0 returned 1
+        1:  323:    CuAssertTrue(tc, 0 == hashmapq_count(hm));
+call    0 returned 1
+call    1 returned 1
+        1:  324:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  325:}
+        -:  326:
+function TesthashmapqQuadratic_DoesNotHaveNextForEmptyIterator called 1 returned 100% blocks executed 100%
+        1:  327:void TesthashmapqQuadratic_DoesNotHaveNextForEmptyIterator(
+        -:  328:    CuTest * tc
+        -:  329:)
+        -:  330:{
+        -:  331:    hashmapq_t *hm;
+        -:  332:    hashmapq_iterator_t iter;
+        -:  333:
+        1:  334:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  335:    hashmapq_iterator(hm, &iter);
+call    0 returned 1
+        1:  336:    CuAssertTrue(tc, 0 == hashmapq_iterator_has_next(hm, &iter));
+call    0 returned 1
+call    1 returned 1
+        1:  337:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  338:}
+        -:  339:
+function TesthashmapqQuadratic_RemoveItemDoesNotHaveNextForEmptyIterator called 1 returned 100% blocks executed 100%
+        1:  340:void TesthashmapqQuadratic_RemoveItemDoesNotHaveNextForEmptyIterator(
+        -:  341:    CuTest * tc
+        -:  342:)
+        -:  343:{
+        -:  344:    hashmapq_t *hm;
+        -:  345:    hashmapq_iterator_t iter;
+        -:  346:
+        1:  347:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  348:    hashmapq_put(hm, (void *) 9, (void *) 52);
+call    0 returned 1
+        1:  349:    hashmapq_remove(hm, (void *) 9);
+call    0 returned 1
+        1:  350:    hashmapq_iterator(hm, &iter);
+call    0 returned 1
+        1:  351:    CuAssertTrue(tc, 0 == hashmapq_iterator_has_next(hm, &iter));
+call    0 returned 1
+call    1 returned 1
+        1:  352:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  353:}
+        -:  354:
+function TesthashmapqQuadratic_Iterate called 1 returned 100% blocks executed 100%
+        1:  355:void TesthashmapqQuadratic_Iterate(
+        -:  356:    CuTest * tc
+        -:  357:)
+        -:  358:{
+        -:  359:    hashmapq_t *hm;
+        -:  360:    hashmapq_t *hm2;
+        -:  361:    hashmapq_iterator_t iter;
+        -:  362:    void *key;
+        -:  363:
+        1:  364:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  365:    hm2 = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  366:
+        1:  367:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:  368:    hashmapq_put(hm, (void *) 49, (void *) 91);
+call    0 returned 1
+        1:  369:    hashmapq_put(hm, (void *) 48, (void *) 90);
+call    0 returned 1
+        1:  370:    hashmapq_put(hm, (void *) 47, (void *) 89);
+call    0 returned 1
+        1:  371:    hashmapq_put(hm, (void *) 46, (void *) 88);
+call    0 returned 1
+        1:  372:    hashmapq_put(hm, (void *) 45, (void *) 87);
+call    0 returned 1
+        1:  373:    hashmapq_put(hm2, (void *) 50, (void *) 92);
+call    0 returned 1
+        -:  374:
+        -:  375:
+        1:  376:    hashmapq_put(hm2, (void *) 49, (void *) 91);
+call    0 returned 1
+        1:  377:    hashmapq_put(hm2, (void *) 48, (void *) 90);
+call    0 returned 1
+        1:  378:    hashmapq_put(hm2, (void *) 47, (void *) 89);
+call    0 returned 1
+        1:  379:    hashmapq_put(hm2, (void *) 46, (void *) 88);
+call    0 returned 1
+        1:  380:    hashmapq_put(hm2, (void *) 45, (void *) 87);
+call    0 returned 1
+        -:  381:
+        1:  382:    hashmapq_iterator(hm, &iter);
+call    0 returned 1
+        -:  383:
+        -:  384:    /*  remove every key we iterate on */
+        8:  385:    while ((key = hashmapq_iterator_next(hm, &iter)))
+call    0 returned 7
+branch  1 taken 6
+branch  2 taken 1 (fallthrough)
+        -:  386:    {
+        6:  387:        CuAssertTrue(tc, NULL != hashmapq_remove(hm2, key));
+call    0 returned 6
+call    1 returned 6
+        -:  388:    }
+        -:  389:
+        -:  390:    /*  check if the hashmapq is empty */
+        1:  391:    CuAssertTrue(tc, 0 == hashmapq_count(hm2));
+call    0 returned 1
+call    1 returned 1
+        1:  392:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  393:}
+        -:  394:
+function TesthashmapqQuadratic_IterateHandlesCollisions called 1 returned 100% blocks executed 100%
+        1:  395:void TesthashmapqQuadratic_IterateHandlesCollisions(
+        -:  396:    CuTest * tc
+        -:  397:)
+        -:  398:{
+        -:  399:    hashmapq_t *hm, *hm2;
+        -:  400:
+        -:  401:    hashmapq_iterator_t iter;
+        -:  402:
+        -:  403:    void *key;
+        -:  404:
+        1:  405:    hm = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        1:  406:    hm2 = hashmapq_new(__uint_hash, __uint_compare, 4);
+call    0 returned 1
+        -:  407:
+        1:  408:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  409:    hashmapq_put(hm, (void *) 5, (void *) 91);
+call    0 returned 1
+        1:  410:    hashmapq_put(hm, (void *) 9, (void *) 90);
+call    0 returned 1
+        -:  411:
+        1:  412:    hashmapq_put(hm2, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  413:    hashmapq_put(hm2, (void *) 5, (void *) 91);
+call    0 returned 1
+        1:  414:    hashmapq_put(hm2, (void *) 9, (void *) 90);
+call    0 returned 1
+        -:  415:
+        1:  416:    hashmapq_iterator(hm, &iter);
+call    0 returned 1
+        -:  417:
+        -:  418:    /*  remove every key we iterate on */
+        5:  419:    while ((key = hashmapq_iterator_next(hm, &iter)))
+call    0 returned 4
+branch  1 taken 3
+branch  2 taken 1 (fallthrough)
+        -:  420:    {
+        3:  421:        CuAssertTrue(tc, NULL != hashmapq_remove(hm2, key));
+call    0 returned 3
+call    1 returned 3
+        -:  422:    }
+        -:  423:
+        -:  424:    /*  check if the hashmapq is empty */
+        1:  425:    CuAssertTrue(tc, 0 == hashmapq_count(hm2));
+call    0 returned 1
+call    1 returned 1
+        1:  426:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  427:}
+        -:  428:
+function TesthashmapqQuadratic_IterateAndRemoveDoesntBreakIteration called 1 returned 100% blocks executed 100%
+        1:  429:void TesthashmapqQuadratic_IterateAndRemoveDoesntBreakIteration(
+        -:  430:    CuTest * tc
+        -:  431:)
+        -:  432:{
+        -:  433:    hashmapq_t *hm;
+        -:  434:    hashmapq_t *hm2;
+        -:  435:    hashmapq_iterator_t iter;
+        -:  436:    void *key;
+        -:  437:
+        1:  438:    hm = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        1:  439:    hm2 = hashmapq_new(__uint_hash, __uint_compare, 8);
+call    0 returned 1
+        -:  440:
+        1:  441:    hashmapq_put(hm, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:  442:    hashmapq_put(hm, (void *) 49, (void *) 91);
+call    0 returned 1
+        1:  443:    hashmapq_put(hm, (void *) 48, (void *) 90);
+call    0 returned 1
+        1:  444:    hashmapq_put(hm, (void *) 47, (void *) 89);
+call    0 returned 1
+        1:  445:    hashmapq_put(hm, (void *) 46, (void *) 88);
+call    0 returned 1
+        1:  446:    hashmapq_put(hm, (void *) 45, (void *) 87);
+call    0 returned 1
+        -:  447:    /*  the following 3 collide: */
+        1:  448:    hashmapq_put(hm, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  449:    hashmapq_put(hm, (void *) 5, (void *) 91);
+call    0 returned 1
+        1:  450:    hashmapq_put(hm, (void *) 9, (void *) 90);
+call    0 returned 1
+        -:  451:
+        1:  452:    hashmapq_put(hm2, (void *) 50, (void *) 92);
+call    0 returned 1
+        1:  453:    hashmapq_put(hm2, (void *) 49, (void *) 91);
+call    0 returned 1
+        1:  454:    hashmapq_put(hm2, (void *) 48, (void *) 90);
+call    0 returned 1
+        1:  455:    hashmapq_put(hm2, (void *) 47, (void *) 89);
+call    0 returned 1
+        1:  456:    hashmapq_put(hm2, (void *) 46, (void *) 88);
+call    0 returned 1
+        1:  457:    hashmapq_put(hm2, (void *) 45, (void *) 87);
+call    0 returned 1
+        -:  458:    /*  the following 3 collide: */
+        1:  459:    hashmapq_put(hm2, (void *) 1, (void *) 92);
+call    0 returned 1
+        1:  460:    hashmapq_put(hm2, (void *) 5, (void *) 91);
+call    0 returned 1
+        1:  461:    hashmapq_put(hm2, (void *) 9, (void *) 90);
+call    0 returned 1
+        -:  462:
+        1:  463:    hashmapq_iterator(hm, &iter);
+call    0 returned 1
+        -:  464:
+        -:  465:    /*  remove every key we iterate on */
+       11:  466:    while ((key = hashmapq_iterator_next(hm, &iter)))
+call    0 returned 10
+branch  1 taken 9
+branch  2 taken 1 (fallthrough)
+        -:  467:    {
+        9:  468:        CuAssertTrue(tc, NULL != hashmapq_remove(hm2, key));
+call    0 returned 9
+call    1 returned 9
+        9:  469:        hashmapq_remove(hm,key);
+call    0 returned 9
+        -:  470:    }
+        -:  471:
+        -:  472:    /*  check if the hashmapq is empty */
+        1:  473:    CuAssertTrue(tc, 0 == hashmapq_count(hm2));
+call    0 returned 1
+call    1 returned 1
+        1:  474:    hashmapq_freeall(hm);
+call    0 returned 1
+        1:  475:    hashmapq_freeall(hm2);
+call    0 returned 1
+        1:  476:}
+        -:  477:

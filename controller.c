@@ -35,6 +35,7 @@ typedef struct {
 
 
 typedef struct{
+  char *mutation_code;
   char *mutant_source_file;
   //fragility is between 0->1
   double fragility;
@@ -89,14 +90,14 @@ typedef struct{
   HOMResult *homResult;
 } MResult;
 
-
+int PUTValgrindErrors=0;
 int make_logs;
 int verbose_mode=0;
 int preset_project=0;
-FILE* mutation_results;
-FILE* temp_results;
-char* mutation_results_path;
-char* make_logs_dir;
+FILE* mutation_results=NULL;
+FILE* temp_results=NULL;
+char* mutation_results_path=NULL;
+char* make_logs_dir=NULL;
 char* temp_results_path=NULL;
 char* GSTATS_PATH=NULL;
 
@@ -278,7 +279,7 @@ int runMake(char*projectDir,char*currentMutation,char*makeTestTarget){
   char**args_make = calloc(sizeof(char*),5);
   args_make[0]="make";
   args_make[1]="-C";
-  args_make[2]=malloc(sizeof(char)*strlen(projectDir)+1);
+  args_make[2]=calloc(sizeof(char),strlen(projectDir)+1);
   strcpy(args_make[2],projectDir);
   //now run
   args_make[3]=makeTestTarget;
@@ -328,10 +329,11 @@ int* get_non_trivial_FOM_stats(){
   
   //Parse comma separated string
   int counter=3; 
-  char *pt = strtok (killed_test_id,",");
+  char *pt=NULL;
+  pt = strtok (killed_test_id,",");
   while (pt != NULL) {
     if(counter>20){
-      stats = realloc(stats,(counter*2)*sizeof(int*));
+      stats = realloc(stats,(counter*=2)*sizeof(int*));
     }
     stats[counter++]= atoi(pt);
     pt = strtok (NULL, ",");
@@ -443,11 +445,12 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   int make_result = runMake(makeDir,str,user_config->makeTestTarget);
   double cfgDeviation =0.0;
   
+  create_update_gstat_mutation(mutation_code,"mutants_generated",get_gstat_value_mutation(mutation_code,"mutants_generated")+1);
+  
   if(make_result==2){
     mResult->fomResult->mutant_kill_count++;
     mResult->fomResult->failed_injection++;
     //Update gstats to record mutant did not execute
-    create_update_gstat_mutation(mutation_code,"no_execution",get_gstat_value_mutation(mutation_code,"no_execution")+1);
     create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count"));
   }else{
     //Update gstats to record mutant generation
@@ -461,8 +464,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     char* cfg_out_file = malloc(snprintf(NULL, 0, "%s/mutation_out/%s/%s.c.gcov.branches",cwd,original_file_Name_dir,original_file_Name_dir) + 1);
     sprintf(cfg_out_file, "%s/mutation_out/%s/%s.c.gcov.branches",cwd,original_file_Name_dir,original_file_Name_dir);
     //original path
-    char* cfg_original_file = malloc(snprintf(NULL, 0, "%s/mutation_out/PUT_Gcov/%s.c.gcov.branches",cwd,original_file_Name_dir) + 1);
-    sprintf(cfg_original_file, "%s/mutation_out/PUT_Gcov/%s.c.gcov.branches",cwd,original_file_Name_dir);
+    char* cfg_original_file = malloc(snprintf(NULL, 0, "%s/mutation_out/PUT/%s.c.gcov.branches",cwd,original_file_Name_dir) + 1);
+    sprintf(cfg_original_file, "%s/mutation_out/PUT/%s.c.gcov.branches",cwd,original_file_Name_dir);
     
     //calculate the deviation
     cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
@@ -507,7 +510,10 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       create_update_gstat_mutation(mutation_code,"non_trivial",get_gstat_value_mutation(mutation_code,"non_triviald")+1);
      
       non_trivial_FOMS_ptr[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
+      non_trivial_FOMS_ptr[NTFC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
       strncpy(non_trivial_FOMS_ptr[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
+      strncpy(non_trivial_FOMS_ptr[NTFC].mutation_code,mutation_code,strlen(mutation_code));
+      
       non_trivial_FOMS_ptr[NTFC].fragility=((double)stats[1]/(double)stats[2]);
       non_trivial_FOMS_ptr[NTFC].cfgDeviation=cfgDeviation;
       non_trivial_FOMS_ptr[NTFC].damage=(((1-non_trivial_FOMS_ptr[NTFC].fragility)/3.0)+(non_trivial_FOMS_ptr[NTFC].cfgDeviation/3.0));
@@ -535,6 +541,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     if(cfgDeviation!=0){
 	mResult->fomResult->survived_caused_CFG_deviation++;
+	create_update_gstat_mutation(mutation_code,"survived_CFG_deviation",get_gstat_value_mutation(mutation_code,"survived_CFG_deviation")+1);
     }
     
     int SMC = mResult->fomResult->survived_count;
@@ -557,7 +564,10 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     }
     //Store results in the Mutant
     survived_ptr[SMC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
+    survived_ptr[SMC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
     strncpy(survived_ptr[SMC].mutant_source_file,filename_qfd,strlen(filename_qfd));
+    strncpy(survived_ptr[SMC].mutation_code,mutation_code,strlen(mutation_code));
+    
     survived_ptr[SMC].valgrindResult=valgrindResult;
     survived_ptr[SMC].cfgDeviation=cfgDeviation;
     survived_ptr[SMC].damage=(((1-survived_ptr[SMC].fragility)/3.0)+(survived_ptr[SMC].cfgDeviation/3.0));
@@ -587,7 +597,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
 
 MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_file_Name,Config *user_config,char* txl_original,char*original_file_Name_dir,char*cwd){
   
-  int non_trivial_FOM_buffer = 20;
+  int non_trivial_FOM_buffer = 200;
   
   MResult *mResult = malloc(sizeof(MResult));
   mResult->fomResult= malloc(sizeof(FOMResult));
@@ -820,6 +830,7 @@ void generateSubsumingHOMs(char* srcDir,char*target,char*makeDir,Config *user_co
 }
 
 double calculate_average_damage(FOMResult * fomResult){
+  open_GStats(GSTATS_PATH);
   //update and calculate damage
   double average_damage =0.0;
   int total_valgrind_errors = fomResult->total_valgrind_errors;
@@ -831,6 +842,7 @@ double calculate_average_damage(FOMResult * fomResult){
     Mutant m = survived_ptr[s];
     if(m.valgrindResult!=NULL){
       m.damage+=(((m.valgrindResult->valgrind_error_count)/total_valgrind_errors)/3.0);
+      create_update_gstat_mutation(m.mutation_code,"damage_raw",get_gstat_value_mutation(m.mutation_code,"damage_raw")+(m.damage*100));
     }
     average_damage+=m.damage;
   }
@@ -838,10 +850,13 @@ double calculate_average_damage(FOMResult * fomResult){
     Mutant m = non_trivial_FOMS_ptr[s];
     if(m.valgrindResult!=NULL){
       m.damage+=(((m.valgrindResult->valgrind_error_count)/total_valgrind_errors)/3.0);
+      create_update_gstat_mutation(m.mutation_code,"damage_raw",get_gstat_value_mutation(m.mutation_code,"damage_raw")+(m.damage*100));
     }
     average_damage+=m.damage;
   }
-  return average_damage/(double)fomResult->total_mutants;
+  flush_GStats(GSTATS_PATH);
+  close_GStats(GSTATS_PATH);
+  return average_damage==0.0?0:average_damage/(double)(fomResult->total_mutants-fomResult->failed_injection);
 }
 
 
@@ -904,24 +919,47 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     
     double average_damage = calculate_average_damage(mResult->fomResult);
     
-    printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n*-------------------------------------------------------------------------*\n* Total Mutants: %d (FOM) %d (HOM)\n* Mutants killed: %d (FOM) %d (HOM)\n*  > Non-trivial mutants: %d (FOM)\n*  > Dumb mutants: %d (FOM)\n*  > Caused CFG deviation: %d (FOM)\n*  > Caused Valgrind errors: %d (FOM)\n*  > Failed Injection: %d (FOM)\n* Mutants survived: %d (FOM) %d (HOM)\n*  > Live/Equivalent mutants: %d (FOM)\n*  > Failed Valgrind checks: %d (FOM)\n*  > Caused CFG deviation: %d (FOM)\n* Average damage: %G (FOM)\n* Mutation score: %G (FOM) %G (HOM)\n*-------------------------------------------------------------------------*\n",*source,
+    printf("\n*-------------------------------------------------------------------------*\n* Results for %s:\n*-------------------------------------------------------------------------*\n* Generated Mutants: %d \n* Mutants survived: %d (%.2f%%)\n*  > Equivalent: %d (%.2f%%)\n*  > Strongly damaging: %d (%.2f%%)\n*\t> Caused Valgrind errors: %d (%.2f%%)\n*\t> Caused CFG deviation: %d (%.2f%%)\n*  > Weakly damaging: %d (%.2f%%)\n*\t> Caused Valgrind errors: %d (%.2f%%)\n*\t> Caused CFG deviation: %d (%.2f%%)\n* Mutants killed: %d (%.2f%%)\n*  > Dumb mutants: %d (%.2f%%)\n*  > Strongly damaging: %d (%.2f%%)\n*\t> Caused Valgrind errors: %d (%.2f%%)\n*\t> Caused CFG deviation: %d (%.2f%%)\n*  > Weakly damaging: %d (%.2f%%)\n*\t> Caused Valgrind errors: %d (%.2f%%)\n*\t> Caused CFG deviation: %d (%.2f%%)\n*  > Failed Injection: %d (%.2f%%)\n*-------------------------------------------------------------------------*\n* Total Valgrind memory errors: %d\n* Average Valgrind memory error deviation: %.2f%%\n* Average CFG deviation: %.2f%%\n* Average mutant damage score: %.2f\n* Mutation score: %d\n*-------------------------------------------------------------------------*\n",*source,
 	   mResult->fomResult->total_mutants, 
-	   mResult->homResult->total_mutants, 
-	   mResult->fomResult->mutant_kill_count,
-	   mResult->homResult->mutant_kill_count,
-	   mResult->fomResult->non_trivial_FOM_count,
-	   mResult->fomResult->mutant_kill_count-(mResult->fomResult->non_trivial_FOM_count+mResult->fomResult->failed_injection),
-	   mResult->fomResult->caused_CFG_deviation - mResult->fomResult->survived_caused_CFG_deviation,
-	   mResult->fomResult->killed_by_valgrind - mResult->fomResult->survived_killed_by_valgrind,
-	    mResult->fomResult->failed_injection,
 	   mResult->fomResult->survived_count,
+	   ((double)mResult->fomResult->survived_count/(double)mResult->fomResult->total_mutants)*100,
 	   0,
-	   mResult->fomResult->survived_count-(mResult->fomResult->survived_killed_by_valgrind+mResult->fomResult->survived_caused_CFG_deviation),
-	   mResult->fomResult->survived_killed_by_valgrind,
-	   mResult->fomResult->survived_caused_CFG_deviation,
-	   average_damage,
-	   mResult->fomResult->total_mutants!=0?(double)mResult->fomResult->mutant_kill_count/(double)mResult->fomResult->total_mutants:0,
-	   mResult->homResult->total_mutants!=0?(double)mResult->homResult->mutant_kill_count/(double)mResult->homResult->total_mutants:0
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0,
+	   0.0,
+	   0.0,
+	   0.0,
+	   0
     );
     
     //Update gstats with the aggregated resuts of this run
@@ -1068,7 +1106,7 @@ int main(int argc, char**argv) {
     //Create mutation_out
     mkdir("mutation_out",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     //Create gcov_out
-    mkdir("mutation_out/PUT_Gcov",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir("mutation_out/PUT",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     
     //copy PUT
     char *args_cp[5];
@@ -1082,7 +1120,13 @@ int main(int argc, char**argv) {
     //Generate initial stats for PUT
     setenv("IS_MUTATE","false",1);
     runMake(copy_put,NULL,user_config->makeTestTarget);
-    extractCFGBranches(copy_put,"mutation_out/PUT_Gcov",NULL);
+    // CFG data for the PUT
+    extractCFGBranches(copy_put,"mutation_out/PUT",NULL);
+    // Valgrind data for the PUT
+    ValgrindResult* valgrindResultPUT = genValgrindResult(cwd,"PUT","PUT",copy_put,user_config);
+    if(valgrindResultPUT!=NULL){
+      PUTValgrindErrors = valgrindResultPUT->valgrind_error_count;
+    }
     setenv("IS_MUTATE","true",1);
     
     if(user_config->testingFramework==1){
