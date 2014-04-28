@@ -1,6 +1,0 @@
-sourceRootDir="/home/jay/Desktop/Mutate/small-put/PeerWireProtocol";
-source = ("pwp_msghandler.c","pwp_connection.c","pwp_handshaker.c","pwp_bitfield.c");
-outputDir="";
-testingFramework="cutest";
-CuTestLibSource="tests/CuTest.c";
-executablePath="tests_connection";

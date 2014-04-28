@@ -459,17 +459,15 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   int make_result = runMake(makeDir,str,user_config->makeTestTarget);
   double cfgDeviation =0.0;
   
-  create_update_gstat_mutation(mutation_code,"mutants_generated",get_gstat_value_mutation(mutation_code,"mutants_generated")+1);
+  create_update_gstat_mutation(mutation_code,"generated_mutants",get_gstat_value_mutation(mutation_code,"generated_mutants")+1);
   
   if(make_result==2){
     mResult->fomResult->mutant_kill_count++;
     mResult->fomResult->failed_injection++;
     //Update gstats to record mutant did not execute
-    create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count"));
+    create_update_gstat_mutation(mutation_code,"failed_injection",get_gstat_value_mutation(mutation_code,"failed_injection")+1);
   }else{
-    //Update gstats to record mutant generation
-    create_update_gstat_mutation(mutation_code,"infection_count",get_gstat_value_mutation(mutation_code,"infection_count")+1);
-    
+
     char* cfg_out = malloc(snprintf(NULL, 0, "%s/mutation_out/%s",cwd,original_file_Name_dir) + 1);
     sprintf(cfg_out, "%s/mutation_out/%s",cwd,original_file_Name_dir);
     extractCFGBranches(makeDir,cfg_out,original_file_Name_dir);
@@ -484,10 +482,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     //calculate the deviation
     cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
     if(cfgDeviation>0){
-      create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count")+1);
+      create_update_gstat_mutation(mutation_code,"cfg_deviation_raw",get_gstat_value_mutation(mutation_code,"cfg_deviation_raw")+(cfgDeviation*100));
       mResult->fomResult->caused_CFG_deviation++;
-    }else{
-      create_update_gstat_mutation(mutation_code,"cfg_deviation_count",get_gstat_value_mutation(mutation_code,"cfg_deviation_count"));
     }
      
     mutation_results = fopen(mutation_results_path,"a+");
@@ -504,8 +500,6 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
   if(stats[0]-prev_killed_by_tests==1){
     //Update gstats to record mutant was killed
     create_update_gstat_mutation(mutation_code,"killed_by_tests",get_gstat_value_mutation(mutation_code,"killed_by_tests")+1);
-    //Update gstats to record the number of tests that killed the mutant
-    create_update_gstat_mutation(mutation_code,"killed_by_test_count",get_gstat_value_mutation(mutation_code,"killed_by_test_count")+stats[1]);
     
     
     mResult->fomResult->mutant_kill_count++;
@@ -527,8 +521,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       //Was a non_trivial_mutant ie: only a subset of the tests killed it
       
       //Update gstats to record mutant was a  non_trivial_mutant
-      create_update_gstat_mutation(mutation_code,"non_trivial",get_gstat_value_mutation(mutation_code,"non_triviald")+1);
-     
+      
       non_trivial_FOMS_ptr[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
       non_trivial_FOMS_ptr[NTFC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
       strncpy(non_trivial_FOMS_ptr[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
@@ -551,21 +544,29 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     if((valgrindResult!=NULL && valgrindResult->valgrind_error_count!=PUTValgrindErrors)&& cfgDeviation>0){
        mResult->fomResult->killed_SD++;
+       create_update_gstat_mutation(mutation_code,"killed_SD",get_gstat_value_mutation(mutation_code,"killed_SD")+1);
+       
     }else if((valgrindResult!=NULL && valgrindResult->valgrind_error_count!=PUTValgrindErrors)){
       mResult->fomResult->killed_WD++;
       mResult->fomResult->killed_WD_causedValgrindErrors++;
+       create_update_gstat_mutation(mutation_code,"killed_WD",get_gstat_value_mutation(mutation_code,"killed_WD")+1);
+      create_update_gstat_mutation(mutation_code,"killed_WD_VE",get_gstat_value_mutation(mutation_code,"killed_WD_VE")+1);
+   
     }else if(cfgDeviation>0){
       mResult->fomResult->killed_WD++;
       mResult->fomResult->killed_WD_caused_CFG_deviation++;
+       create_update_gstat_mutation(mutation_code,"killed_WD",get_gstat_value_mutation(mutation_code,"killed_WD")+1);
+      create_update_gstat_mutation(mutation_code,"killed_WD_CFD",get_gstat_value_mutation(mutation_code,"killed_WD_CFD")+1);
+   
     }
     
   }else if(make_result!=2){
     //Update gstats to record the mutant survived
-    create_update_gstat_mutation(mutation_code,"survived_tests_count",get_gstat_value_mutation(mutation_code,"survived_tests_count")+1);
+    //create_update_gstat_mutation(mutation_code,"survived_tests_count",get_gstat_value_mutation(mutation_code,"survived_tests_count")+1);
     
     if(cfgDeviation!=0){
 	mResult->fomResult->survived_caused_CFG_deviation++;
-	create_update_gstat_mutation(mutation_code,"survived_CFG_deviation",get_gstat_value_mutation(mutation_code,"survived_CFG_deviation")+1);
+	//create_update_gstat_mutation(mutation_code,"survived_CFG_deviation",get_gstat_value_mutation(mutation_code,"survived_CFG_deviation")+1);
     }
     
     int SMC = mResult->fomResult->survived_count;
@@ -578,14 +579,23 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     if((valgrindResult==NULL||(valgrindResult!=NULL && valgrindResult->valgrind_error_count==PUTValgrindErrors)) && cfgDeviation==0){
       mResult->fomResult->equivalent_mutants++;
+      create_update_gstat_mutation(mutation_code,"equivalent_mutants",get_gstat_value_mutation(mutation_code,"equivalent_mutants")+1);
+   
     }else if((valgrindResult!=NULL && valgrindResult->valgrind_error_count!=PUTValgrindErrors)&& cfgDeviation>0){
        mResult->fomResult->survived_SD++;
+       create_update_gstat_mutation(mutation_code,"survived_SD",get_gstat_value_mutation(mutation_code,"survived_SD")+1);
+   
     }else if((valgrindResult!=NULL && valgrindResult->valgrind_error_count!=PUTValgrindErrors)){
       mResult->fomResult->survived_WD++;
       mResult->fomResult->survived_WD_causedValgrindErrors++;
+      create_update_gstat_mutation(mutation_code,"survived_WD",get_gstat_value_mutation(mutation_code,"survived_WD")+1);
+      create_update_gstat_mutation(mutation_code,"survived_WD_VE",get_gstat_value_mutation(mutation_code,"survived_WD_VE")+1);
+   
     }else if(cfgDeviation>0){
       mResult->fomResult->survived_WD++;
       mResult->fomResult->survived_WD_caused_CFG_deviation++;
+      create_update_gstat_mutation(mutation_code,"survived_WD",get_gstat_value_mutation(mutation_code,"survived_WD")+1);
+      create_update_gstat_mutation(mutation_code,"survived_WD_CFD",get_gstat_value_mutation(mutation_code,"survived_WD_CFD")+1);
     }
     
     if(valgrindResult!=NULL){
@@ -934,9 +944,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   
   printf("\n");
   
-  if(startprogram(args_txl,NULL,0)!=0){
-    return;
-  }
+  startprogram(args_txl,NULL,0);
   
   printf("\n*-------------------------------------------------------------------------*\n* Mutating %s \n*-------------------------------------------------------------------------*\n\n",*source);
   
@@ -1001,14 +1009,14 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     //Update gstats with the aggregated resuts of this run
     open_GStats(GSTATS_PATH);
     create_update_aggr_results("total_tests_run",get_gstat_value_aggr_results("total_tests_run")+mResult->fomResult->total_tests);
-    create_update_aggr_results("total_valgrind_errors",get_gstat_value_aggr_results("total_valgrind_errors")+mResult->fomResult->total_valgrind_errors);
+    //create_update_aggr_results("total_valgrind_errors",get_gstat_value_aggr_results("total_valgrind_errors")+mResult->fomResult->total_valgrind_errors);
     
-    create_update_aggr_results("total_mutants",get_gstat_value_aggr_results("total_mutants")+mResult->fomResult->total_mutants);
-    create_update_aggr_results("mutant_kill_count",get_gstat_value_aggr_results("mutant_kill_count")+mResult->fomResult->mutant_kill_count);
-    create_update_aggr_results("non_trivial_count",get_gstat_value_aggr_results("non_trivial_count")+mResult->fomResult->non_trivial_FOM_count);
-    create_update_aggr_results("dumb_count",get_gstat_value_aggr_results("dumb_count")+mResult->fomResult->dumb_mutants);
-    create_update_aggr_results("survived_count",get_gstat_value_aggr_results("survived_count")+mResult->fomResult->survived_count);
-    create_update_aggr_results("killed_by_valgrind_count",get_gstat_value_aggr_results("killed_by_valgrind_count")+mResult->fomResult->killed_by_valgrind);
+    //create_update_aggr_results("total_mutants",get_gstat_value_aggr_results("total_mutants")+mResult->fomResult->total_mutants);
+    //create_update_aggr_results("mutant_kill_count",get_gstat_value_aggr_results("mutant_kill_count")+mResult->fomResult->mutant_kill_count);
+    //create_update_aggr_results("non_trivial_count",get_gstat_value_aggr_results("non_trivial_count")+mResult->fomResult->non_trivial_FOM_count);
+    //create_update_aggr_results("dumb_count",get_gstat_value_aggr_results("dumb_count")+mResult->fomResult->dumb_mutants);
+    //create_update_aggr_results("survived_count",get_gstat_value_aggr_results("survived_count")+mResult->fomResult->survived_count);
+    //create_update_aggr_results("killed_by_valgrind_count",get_gstat_value_aggr_results("killed_by_valgrind_count")+mResult->fomResult->killed_by_valgrind);
     flush_GStats(GSTATS_PATH);
     generate_derived_stats();
     flush_GStats(GSTATS_PATH);

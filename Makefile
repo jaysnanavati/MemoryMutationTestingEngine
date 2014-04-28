@@ -9,7 +9,7 @@ hashset.o:
 	cd hashset && make
 
 clean:
-	rm -f *.o all
+	rm -f *.o *.log *.xml all
 	rm -rf mutation_out
 	cd hashset && make clean
 

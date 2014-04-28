@@ -202,52 +202,85 @@ void generate_derived_stats(){
     nodeset = result->nodesetval;
     for (i=0; i < nodeset->nodeNr; i++) {
       xmlNodePtr mutation_operator = nodeset->nodeTab[i];
+      char* gm= (char*)xmlGetProp(mutation_operator, (xmlChar*)"generated_mutants");
+      int generated_mutants = gm==NULL?-1:atoi(gm);
+      xmlFree(gm);
+      
       //Average damage
       char* damage_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"damage_raw");
-      if(damage_count!=NULL){
+      if(damage_count!=NULL && generated_mutants!=-1){
 	int rdc = atoi(damage_count);
-	char*val = double_to_char_heap((double)(rdc/100.0)/(double)total_infection_count);
+	char*val = double_to_char_heap((double)(rdc/100.0)/(double)generated_mutants);
 	xmlSetProp(mutation_operator,(xmlChar*)"damage",BAD_CAST val);
 	xmlFree(damage_count);
 	free(val);
       }
       
       //Fragilty:total number of tests that killed it vs total number of tests that were run
-      char* killed_by_test_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_by_test_count");
-      if(killed_by_test_count!=NULL){
+      char* killed_by_test_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_by_tests");
+      if(killed_by_test_count!=NULL && generated_mutants!=-1){
 	int kbtc = atoi(killed_by_test_count);
-	char*val = double_to_char_heap((double)kbtc/(double)total_tests_run);
+	char*val = double_to_char_heap((double)kbtc/(double)generated_mutants);
 	xmlSetProp(mutation_operator,(xmlChar*)"fragilty",BAD_CAST val);
 	xmlFree(killed_by_test_count);
 	free(val);
       }
+      
+      //Average CFG deviation
+      char* cfd= (char*)xmlGetProp(mutation_operator, (xmlChar*)"cfg_deviation_raw");
+      if(cfd!=NULL && generated_mutants!=-1){
+	int icfd = atoi(cfd);
+	char*val = double_to_char_heap((double)(icfd/100.0)/(double)generated_mutants);
+	xmlSetProp(mutation_operator,(xmlChar*)"average_CFD",BAD_CAST val);
+	xmlFree(cfd);
+	free(val);
+      }
+      
       //Infectiveness: as a ratio of all other mutants, how many times was it able to infect the programs run
-      char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"infection_count");
-      if(infection_count!=NULL){
+      char* infection_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"failed_injection");
+      if(infection_count!=NULL && generated_mutants!=-1){
 	int ic = atoi(infection_count);
-	char*val = double_to_char_heap((double)ic/(double)total_infection_count);
+	char*val = double_to_char_heap(1.0-((double)ic/(double)generated_mutants));
 	xmlSetProp(mutation_operator,(xmlChar*)"infectiveness",BAD_CAST val);
 	xmlFree(infection_count);
 	free(val);
       }
       
-      //Valgrind_immunity: how many times was it detected by valgrind in comparison to other mutants
-      char* valgrind_survive_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"survived_valgrind");
-      if(valgrind_survive_count!=NULL){
+      //Valgrind_immunity
+      char* valgrind_survive_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"survived_WD_VE");
+      char* valgrind_kill_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_WD_VE");
+      if(valgrind_survive_count==NULL && valgrind_kill_count==NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"valgrind_immunity",BAD_CAST "0.0");
+      }else if(valgrind_survive_count==NULL && valgrind_kill_count!=NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"valgrind_immunity",BAD_CAST "0.0");
+      }else if(valgrind_survive_count!=NULL && valgrind_kill_count==NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"valgrind_immunity",BAD_CAST "1.0");
+      }else if(valgrind_survive_count!=NULL && valgrind_kill_count!=NULL){
 	int sv = atoi(valgrind_survive_count);
-	char*val = double_to_char_heap((double)sv/(double)(survived_count-killed_by_valgrind_count));
+	int kv = atoi(valgrind_kill_count);
+	char*val = double_to_char_heap((double)sv/(double)(sv+kv));
 	xmlSetProp(mutation_operator,(xmlChar*)"valgrind_immunity",BAD_CAST val);
 	xmlFree(valgrind_survive_count);
+	xmlFree(valgrind_kill_count);
 	free(val);
       }
       
-      //Memory_damage: number of valgrind errors it generats vs others
-      char* valgrind_e_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"valgrind_errors_count");
-      if(valgrind_e_count!=NULL){
-	int vec = atoi(valgrind_e_count);
-	char*val = double_to_char_heap((double)vec/(double)total_valgrind_errors);
-	xmlSetProp(mutation_operator,(xmlChar*)"memory_damage",BAD_CAST val);
-	xmlFree(valgrind_e_count);
+      //CFG_immunity
+      char* cfd_survive_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"survived_WD_CFD");
+      char* cfd_kill_count= (char*)xmlGetProp(mutation_operator, (xmlChar*)"killed_WD_CFD");
+      if(cfd_survive_count==NULL && cfd_kill_count==NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"CFD_immunity",BAD_CAST "0.0");
+      }else if(cfd_survive_count==NULL && cfd_kill_count!=NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"CFD_immunity",BAD_CAST "0.0");
+      }else if(cfd_survive_count!=NULL && cfd_kill_count==NULL){
+	xmlSetProp(mutation_operator,(xmlChar*)"CFD_immunity",BAD_CAST "1.0");
+      }else if(cfd_survive_count!=NULL && cfd_kill_count!=NULL){
+	int scfd = atoi(cfd_survive_count);
+	int kcfd = atoi(cfd_kill_count);
+	char*val = double_to_char_heap((double)scfd/(double)(scfd+kcfd));
+	xmlSetProp(mutation_operator,(xmlChar*)"CFD_immunity",BAD_CAST val);
+	xmlFree(cfd_survive_count);
+	xmlFree(cfd_kill_count);
 	free(val);
       }
     }
