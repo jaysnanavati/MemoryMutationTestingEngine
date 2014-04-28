@@ -1,0 +1,162 @@
+branch  0 taken 23 (fallthrough)
+branch  1 taken 0
+branch  2 taken 22 (fallthrough)
+branch  3 taken 1
+branch  0 taken 22 (fallthrough)
+branch  1 taken 0
+branch  0 taken 49 (fallthrough)
+branch  1 taken 0
+branch  0 taken 7 (fallthrough)
+branch  1 taken 0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 15
+branch  1 taken 0 (fallthrough)
+branch  2 taken 15
+branch  0 taken 0 (fallthrough)
+branch  1 taken 36
+branch  0 taken 0 (fallthrough)
+branch  1 taken 36
+branch  1 taken 1
+branch  2 taken 6 (fallthrough)
+branch  2 taken 1
+branch  3 taken 6 (fallthrough)
+branch  1 taken 1
+branch  2 taken 6 (fallthrough)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  2 never executed
+branch  3 never executed
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  1 never executed
+branch  2 never executed
+branch  0 never executed
+branch  1 never executed
+branch  1 taken 1 (fallthrough)
+branch  2 taken 1
+branch  0 taken 4 (fallthrough)
+branch  1 taken 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 1
+branch  4 taken 0 (fallthrough)
+branch  5 taken 3
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+branch 12 never executed
+branch 13 never executed
+branch 14 never executed
+branch 15 never executed
+branch 16 never executed
+branch 17 never executed
+branch  1 taken 4 (fallthrough)
+branch  2 taken 3
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 43 (fallthrough)
+branch  1 taken 1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 43
+branch  0 taken 20 (fallthrough)
+branch  1 taken 23
+branch  0 taken 1 (fallthrough)
+branch  1 taken 8
+branch  0 never executed
+branch  1 never executed
+branch  0 never executed
+branch  1 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 never executed
+branch  2 never executed
+branch  0 never executed
+branch  1 never executed
+branch  1 never executed
+branch  2 never executed
+branch  1 taken 2 (fallthrough)
+branch  2 taken 2
+branch  1 taken 1 (fallthrough)
+branch  2 taken 1
+branch  0 taken 40
+branch  1 taken 2 (fallthrough)
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0
+branch  1 taken 1 (fallthrough)
+branch  2 taken 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+branch  0 taken 1 (fallthrough)
+branch  1 taken 7
+branch  1 taken 1 (fallthrough)
+branch  2 taken 6
+branch  1 taken 1 (fallthrough)
+branch  2 taken 5
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 4
+branch  1 taken 3 (fallthrough)
+branch  2 taken 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+branch  2 taken 8
+branch  3 taken 8 (fallthrough)
+branch  1 taken 8
+branch  2 taken 8 (fallthrough)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 8
+branch  0 taken 6 (fallthrough)
+branch  1 taken 2
+branch  2 taken 5 (fallthrough)
+branch  3 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+branch  0 taken 2 (fallthrough)
+branch  1 taken 1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  0 taken 0 (fallthrough)
+branch  1 taken 8

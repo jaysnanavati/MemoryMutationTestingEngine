@@ -1,0 +1,518 @@
+        -:    0:Source:pwp_msghandler.c
+        -:    0:Programs:2
+        -:    1:
+        -:    2:/**
+        -:    3: * Copyright (c) 2011, Willem-Hendrik Thiart
+        -:    4: * Use of this source code is governed by a BSD-style license that can be
+        -:    5: * found in the LICENSE file. 
+        -:    6: *
+        -:    7: * @file
+        -:    8: * @brief pwp_msghandler is an adapter between a data channel and pwp_connection
+        -:    9: *        Bytes from data channel are converted into events for pwp_connection
+        -:   10: *        This module allows us to make pwp_connection event based
+        -:   11: * @author  Willem Thiart himself@willemthiart.com
+        -:   12: * @version 0.1
+        -:   13: */
+        -:   14:
+        -:   15:#include <stdio.h>
+        -:   16:#include <stdlib.h>
+        -:   17:#include <string.h>
+        -:   18:#include <assert.h>
+        -:   19:
+        -:   20:/* for uint32_t */
+        -:   21:#include <stdint.h>
+        -:   22:
+        -:   23:#include "bitfield.h"
+        -:   24:#include "pwp_connection.h"
+        -:   25:#include "pwp_msghandler.h"
+        -:   26:#include "pwp_msghandler_private.h"
+        -:   27:
+        -:   28:/**
+        -:   29: * Flip endianess **/
+function fe called 29 returned 100% blocks executed 100%
+       29:   30:static uint32_t fe(uint32_t i)
+        -:   31:{
+        -:   32:    uint32_t o;
+       29:   33:    unsigned char *c = (unsigned char *)&i;
+       29:   34:    unsigned char *p = (unsigned char *)&o;
+        -:   35:
+       29:   36:    p[0] = c[3];
+       29:   37:    p[1] = c[2];
+       29:   38:    p[2] = c[1];
+       29:   39:    p[3] = c[0];
+       29:   40:    return o;
+        -:   41:}
+        -:   42:
+function mh_uint32 called 29 returned 100% blocks executed 86%
+      145:   43:int mh_uint32(
+        -:   44:        uint32_t* in,
+        -:   45:        msg_t *msg,
+        -:   46:        const unsigned char** buf,
+        -:   47:        unsigned int *len)
+        -:   48:{
+        -:   49:    while (1)
+        -:   50:    {
+      145:   51:        if (msg->tok_bytes_read == 4)
+branch  0 taken 29 (fallthrough)
+branch  1 taken 116
+        -:   52:        {
+       29:   53:            *in = fe(*in);
+call    0 returned 29
+       29:   54:            msg->tok_bytes_read = 0;
+       29:   55:            return 1;
+        -:   56:        }
+      116:   57:        else if (*len == 0)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 116
+        -:   58:        {
+    #####:   59:            return 0;
+        -:   60:        }
+        -:   61:
+      116:   62:        *((unsigned char*)in + msg->tok_bytes_read) = **buf;
+      116:   63:        msg->tok_bytes_read += 1;
+      116:   64:        msg->bytes_read += 1;
+      116:   65:        *buf += 1;
+      116:   66:        *len -= 1;
+      116:   67:    }
+        -:   68:}
+        -:   69:
+        -:   70:/**
+        -:   71: * @param in Read data into 
+        -:   72: * @param tot_bytes_read Running total of total number of bytes read
+        -:   73: * @param buf Read data from
+        -:   74: * @param len Length of stream left to read from */
+function mh_byte called 14 returned 100% blocks executed 75%
+       14:   75:int mh_byte(
+        -:   76:        unsigned char* in,
+        -:   77:        unsigned int *tot_bytes_read,
+        -:   78:        const unsigned char** buf,
+        -:   79:        unsigned int *len)
+        -:   80:{
+       14:   81:    if (*len == 0)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 14
+    #####:   82:        return 0;
+        -:   83:
+       14:   84:    *in = **buf;
+       14:   85:    *tot_bytes_read += 1;
+       14:   86:    *buf += 1;
+       14:   87:    *len -= 1;
+       14:   88:    return 1;
+        -:   89:}
+        -:   90:
+function __pwp_piece_data called 5 returned 100% blocks executed 100%
+        5:   91:int __pwp_piece_data(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:   92:        const unsigned char** buf, unsigned int* len)
+        -:   93:{
+        -:   94:    /* check it isn't bigger than what the message tells
+        -:   95:     * us we should be expecting */
+        5:   96:    int size = min(*len, m->len - 1 - 4 - 4);
+        -:   97:
+        5:   98:    m->pce.data = *buf;
+        5:   99:    m->pce.blk.len = size;
+        5:  100:    pwp_conn_piece(me->pc, &m->pce);
+call    0 returned 5
+        -:  101:
+        -:  102:    /* If we haven't received the full piece, why don't we
+        -:  103:     * just split it "virtually"? That's what we do here: */
+        5:  104:    m->len -= size;
+        5:  105:    m->pce.blk.offset += size;
+        5:  106:    *buf += size;
+        5:  107:    *len -= size;
+        -:  108:
+        -:  109:    /* if we received the whole message we're done */
+        5:  110:    if (9 == m->len)
+branch  0 taken 4 (fallthrough)
+branch  1 taken 1
+        -:  111:    {
+        4:  112:        mh_endmsg(me);
+call    0 returned 4
+        -:  113:    }
+        -:  114:
+        5:  115:    return 1;
+        -:  116:}
+        -:  117:
+function __pwp_piece_offset called 4 returned 100% blocks executed 100%
+        4:  118:int __pwp_piece_offset(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  119:        const unsigned char** buf, unsigned int *len)
+        -:  120:{
+        4:  121:    if (1 == mh_uint32(&m->pce.blk.offset, m, buf, len))
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  122:        me->process_item = __pwp_piece_data;
+        4:  123:    return 1;
+        -:  124:}
+        -:  125:
+function __pwp_piece_pieceidx called 4 returned 100% blocks executed 100%
+        4:  126:int __pwp_piece_pieceidx(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  127:        const unsigned char** buf, unsigned int *len)
+        -:  128:{
+        4:  129:    if (1 == mh_uint32(&m->pce.blk.piece_idx, m, buf, len))
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  130:        me->process_item = __pwp_piece_offset;
+        4:  131:    return 1;
+        -:  132:}
+        -:  133:
+function __pwp_request_len called 1 returned 100% blocks executed 100%
+        1:  134:int __pwp_request_len(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  135:        const unsigned char** buf, unsigned int* len)
+        -:  136:{
+        1:  137:    if (1 == mh_uint32(&m->blk.len, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        -:  138:    {
+        1:  139:        pwp_conn_request(me->pc, &m->blk);
+call    0 returned 1
+        1:  140:        mh_endmsg(me);
+call    0 returned 1
+        -:  141:    }
+        1:  142:    return 1;
+        -:  143:}
+        -:  144:
+function __pwp_request_offset called 1 returned 100% blocks executed 100%
+        1:  145:int __pwp_request_offset(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  146:        const unsigned char** buf, unsigned int *len)
+        -:  147:{
+        1:  148:    if (1 == mh_uint32(&m->blk.offset, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:  149:        me->process_item = __pwp_request_len;
+        1:  150:    return 1;
+        -:  151:}
+        -:  152:
+function __pwp_request_pieceidx called 1 returned 100% blocks executed 100%
+        1:  153:int __pwp_request_pieceidx(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  154:        const unsigned char** buf, unsigned int *len)
+        -:  155:{
+        1:  156:    if (1 == mh_uint32(&m->blk.piece_idx, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:  157:        me->process_item = __pwp_request_offset;
+        1:  158:    return 1;
+        -:  159:}
+        -:  160:
+function __pwp_cancel_len called 1 returned 100% blocks executed 100%
+        1:  161:int __pwp_cancel_len(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  162:        const unsigned char** buf, unsigned int* len)
+        -:  163:{
+        1:  164:    if (1 == mh_uint32(&m->blk.len, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        -:  165:    {
+        1:  166:        pwp_conn_cancel(me->pc, &m->blk);
+call    0 returned 1
+        1:  167:        mh_endmsg(me);
+call    0 returned 1
+        -:  168:    }
+        1:  169:    return 1;
+        -:  170:}
+        -:  171:
+function __pwp_cancel_offset called 1 returned 100% blocks executed 100%
+        1:  172:int __pwp_cancel_offset(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  173:        const unsigned char** buf, unsigned int *len)
+        -:  174:{
+        1:  175:    if (1 == mh_uint32(&m->blk.offset, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:  176:        me->process_item = __pwp_cancel_len;
+        1:  177:    return 1;
+        -:  178:}
+        -:  179:
+function __pwp_cancel_pieceidx called 1 returned 100% blocks executed 100%
+        1:  180:int __pwp_cancel_pieceidx(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  181:        const unsigned char** buf, unsigned int *len)
+        -:  182:{
+        1:  183:    if (1 == mh_uint32(&m->blk.piece_idx, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        1:  184:        me->process_item = __pwp_cancel_offset;
+        1:  185:    return 1;
+        -:  186:}
+        -:  187:
+function __pwp_have called 1 returned 100% blocks executed 100%
+        1:  188:int __pwp_have(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  189:        const unsigned char** buf, unsigned int *len)
+        -:  190:{
+        1:  191:    if (1 == mh_uint32(&m->hve.piece_idx, m, buf, len))
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        -:  192:    {
+        1:  193:        pwp_conn_have(me->pc, &m->hve);
+call    0 returned 1
+        1:  194:        mh_endmsg(me);
+call    0 returned 1
+        -:  195:    }
+        -:  196:
+        1:  197:    return 1;
+        -:  198:}
+        -:  199:
+function __pwp_bitfield called 1 returned 100% blocks executed 94%
+        1:  200:int __pwp_bitfield(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  201:        const unsigned char** buf, unsigned int *len)
+        -:  202:{
+        1:  203:    unsigned char val = 0;
+        -:  204:    unsigned int ii;
+        -:  205:
+        1:  206:    if (1 + 4 == m->bytes_read)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -:  207:    {
+        1:  208:        bitfield_init(&m->bf.bf, (m->len - 1) * 8);
+call    0 returned 1
+        -:  209:    }
+        -:  210:
+        1:  211:    assert(m->bf.bf.bits);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  212:
+        -:  213:    /* read and mark bits from byte */
+        1:  214:    mh_byte(&val, &m->bytes_read, buf, len);
+call    0 returned 1
+        9:  215:    for (ii=0; ii<8; ii++)
+branch  0 taken 8
+branch  1 taken 1 (fallthrough)
+        -:  216:    {
+        8:  217:        if (0x1 == ((unsigned char)(val << ii) >> 7))
+branch  0 taken 4 (fallthrough)
+branch  1 taken 4
+        -:  218:        {
+        4:  219:            bitfield_mark(&m->bf.bf, (m->bytes_read - 5 - 1) * 8 + ii);
+call    0 returned 4
+        -:  220:        }
+        -:  221:    }
+        -:  222:
+        -:  223:    /* done reading bitfield */
+        1:  224:    if (4 + m->len == m->bytes_read)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -:  225:    {
+        1:  226:        pwp_conn_bitfield(me->pc, &m->bf);
+call    0 returned 1
+        1:  227:        bitfield_release(&m->bf.bf);
+call    0 returned 1
+        1:  228:        mh_endmsg(me);
+call    0 returned 1
+        -:  229:    }
+        -:  230:
+        1:  231:    return 1;
+        -:  232:}
+        -:  233:
+function __pwp_type called 13 returned 100% blocks executed 71%
+       13:  234:int __pwp_type(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  235:        const unsigned char** buf,
+        -:  236:        unsigned int *len)
+        -:  237:{
+       13:  238:    assert(4 == m->bytes_read);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 13
+call    2 never executed
+        -:  239:
+       13:  240:    mh_byte(&m->id, &m->bytes_read, buf, len);
+call    0 returned 13
+        -:  241:
+        -:  242:    /* payloadless messages */
+       13:  243:    if (m->len == 1)
+branch  0 taken 4 (fallthrough)
+branch  1 taken 9
+        -:  244:    {
+        4:  245:        switch (m->id)
+branch  0 taken 1
+branch  1 taken 1
+branch  2 taken 1
+branch  3 taken 1
+branch  4 taken 0
+        -:  246:        {
+        -:  247:        case PWP_MSGTYPE_CHOKE:
+        1:  248:            pwp_conn_choke(me->pc);
+call    0 returned 1
+        1:  249:            break;
+        -:  250:        case PWP_MSGTYPE_UNCHOKE:
+        1:  251:            pwp_conn_unchoke(me->pc);
+call    0 returned 1
+        1:  252:            break;
+        -:  253:        case PWP_MSGTYPE_INTERESTED:
+        1:  254:            pwp_conn_interested(me->pc);
+call    0 returned 1
+        1:  255:            break;
+        -:  256:        case PWP_MSGTYPE_UNINTERESTED:
+        1:  257:            pwp_conn_uninterested(me->pc);
+call    0 returned 1
+        1:  258:            break;
+    #####:  259:        default: assert(0); break;
+call    0 never executed
+        -:  260:        }
+        4:  261:        mh_endmsg(me);
+call    0 returned 4
+        -:  262:    }
+        -:  263:    else
+        -:  264:    {
+        9:  265:        if (me->nhandlers < m->id) 
+branch  0 taken 0 (fallthrough)
+branch  1 taken 9
+        -:  266:        {
+    #####:  267:            printf("ERROR: bad pwp msg type: '%d'\n", m->id);
+call    0 never executed
+    #####:  268:            mh_endmsg(me);
+call    0 never executed
+    #####:  269:            return 0;
+        -:  270:        }
+        9:  271:        assert(0 < m->id);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 9
+call    2 never executed
+        9:  272:        assert(m->id < me->nhandlers);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 9
+call    2 never executed
+        9:  273:        assert(me->handlers[m->id].func);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 9
+call    2 never executed
+        9:  274:        me->process_item = me->handlers[m->id].func;
+        9:  275:        me->udata = me->handlers[m->id].udata;
+        -:  276:    }
+        -:  277:
+       13:  278:    return 1;
+        -:  279:}
+        -:  280:
+function __pwp_length called 14 returned 100% blocks executed 90%
+       14:  281:int __pwp_length(pwp_msghandler_private_t *me, msg_t* m, void* udata,
+        -:  282:        const unsigned char** buf,
+        -:  283:        unsigned int *len)
+        -:  284:{
+       14:  285:    assert(m->bytes_read < 4);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 14
+call    2 never executed
+        -:  286:
+       14:  287:    if (1 == mh_uint32(&m->len, m, buf, len))
+call    0 returned 14
+branch  1 taken 14 (fallthrough)
+branch  2 taken 0
+        -:  288:    {
+       14:  289:        if (0 == m->len)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 13
+        -:  290:        {
+        1:  291:            pwp_conn_keepalive(me->pc);
+call    0 returned 1
+        1:  292:            mh_endmsg(me);
+call    0 returned 1
+        -:  293:        }
+        -:  294:        else
+        -:  295:        {
+       13:  296:            me->process_item = __pwp_type;
+        -:  297:        }
+        -:  298:    }
+        -:  299:
+       14:  300:    return 1;
+        -:  301:}
+        -:  302:
+function pwp_msghandler_dispatch_from_buffer called 14 returned 100% blocks executed 80%
+       14:  303:int pwp_msghandler_dispatch_from_buffer(void *mh,
+        -:  304:        const unsigned char* buf,
+        -:  305:        unsigned int len)
+        -:  306:{
+       14:  307:    pwp_msghandler_private_t* me = mh;
+       14:  308:    msg_t* m = &me->msg;
+        -:  309:
+        -:  310:    /* while we have a stream left to read... */
+       77:  311:    while (0 < len)
+branch  0 taken 49
+branch  1 taken 14 (fallthrough)
+        -:  312:    {
+       49:  313:        assert(me->process_item);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 49
+call    2 never executed
+       49:  314:        switch(me->process_item(me,m,me->udata,&buf,&len))
+call    0 returned 49
+branch  1 taken 0
+branch  2 taken 49
+        -:  315:        {
+        -:  316:            case 0:
+    #####:  317:                return 0;
+        -:  318:            default:
+       49:  319:                break;
+        -:  320:        }
+        -:  321:    }
+        -:  322:
+       14:  323:    return 1;
+        -:  324:}
+        -:  325:
+function mh_endmsg called 13 returned 100% blocks executed 100%
+       13:  326:void mh_endmsg(pwp_msghandler_private_t* me)
+        -:  327:{
+       13:  328:    me->process_item = __pwp_length;
+       13:  329:    me->udata = NULL;
+       13:  330:    memset(&me->msg,0,sizeof(msg_t));
+       13:  331:}
+        -:  332:
+function pwp_msghandler_new2 called 13 returned 100% blocks executed 100%
+       13:  333:void* pwp_msghandler_new2(
+        -:  334:        void *pc,
+        -:  335:        pwp_msghandler_item_t* handlers,
+        -:  336:        int nhandlers,
+        -:  337:        unsigned int max_workload_bytes)
+        -:  338:{
+        -:  339:    pwp_msghandler_private_t* me;
+        -:  340:
+       13:  341:    me = calloc(1,sizeof(pwp_msghandler_private_t));
+       13:  342:    me->pc = pc;
+       13:  343:    me->process_item = __pwp_length;
+        -:  344:
+       13:  345:    int size = PWP_MSGTYPE_CANCEL + 1;
+        -:  346:
+       13:  347:    if (handlers)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 12
+        1:  348:        size += nhandlers;
+        -:  349:
+       13:  350:    me->nhandlers = size;
+       13:  351:    me->handlers = calloc(1, sizeof(pwp_msghandler_item_t) * size);
+        -:  352:
+        -:  353:    /* add standard handlers */
+       13:  354:    me->handlers[PWP_MSGTYPE_HAVE].func = __pwp_have;
+       13:  355:    me->handlers[PWP_MSGTYPE_BITFIELD].func = __pwp_bitfield;
+       13:  356:    me->handlers[PWP_MSGTYPE_REQUEST].func = __pwp_request_pieceidx;
+       13:  357:    me->handlers[PWP_MSGTYPE_PIECE].func = __pwp_piece_pieceidx;
+       13:  358:    me->handlers[PWP_MSGTYPE_CANCEL].func = __pwp_cancel_pieceidx;
+        -:  359:
+        -:  360:    /* add custom handlers */
+        -:  361:    int i, s;
+       14:  362:    for (i=PWP_MSGTYPE_CANCEL + 1, s=0; handlers && i<size; i++, s++)
+branch  0 taken 2 (fallthrough)
+branch  1 taken 12
+branch  2 taken 1
+branch  3 taken 1 (fallthrough)
+        -:  363:    {
+        1:  364:        me->handlers[i].func = (void*)handlers[s].func;
+        1:  365:        me->handlers[i].udata = handlers[s].udata;
+        -:  366:    }
+       13:  367:    return me;
+        -:  368:}
+        -:  369:
+function pwp_msghandler_new called 12 returned 100% blocks executed 100%
+       12:  370:void* pwp_msghandler_new(void *pc)
+        -:  371:{
+       12:  372:    return pwp_msghandler_new2(pc,NULL,0,0);
+call    0 returned 12
+        -:  373:}
+        -:  374:
+function pwp_msghandler_release called 13 returned 100% blocks executed 100%
+       13:  375:void pwp_msghandler_release(void *pc)
+        -:  376:{
+       13:  377:    free(pc);
+       13:  378:}
+        -:  379:

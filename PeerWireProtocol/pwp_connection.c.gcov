@@ -1,0 +1,1361 @@
+        -:    0:Source:pwp_connection.c
+        -:    0:Programs:2
+        -:    1:
+        -:    2:/**
+        -:    3: * Copyright (c) 2011, Willem-Hendrik Thiart
+        -:    4: * Use of this source code is governed by a BSD-style license that can be
+        -:    5: * found in the LICENSE file. 
+        -:    6: *
+        -:    7: * @file
+        -:    8: * @brief Manage a connection with a peer
+        -:    9: * @author  Willem Thiart himself@willemthiart.com
+        -:   10: * @version 0.1
+        -:   11: */
+        -:   12:
+        -:   13:#include <stdlib.h>
+        -:   14:#include <string.h>
+        -:   15:#include <stdio.h>
+        -:   16:#include <assert.h>
+        -:   17:
+        -:   18:/* for uint32_t */
+        -:   19:#include <stdint.h>
+        -:   20:
+        -:   21:/* for varags */
+        -:   22:#include <stdarg.h>
+        -:   23:
+        -:   24:#include "bitfield.h"
+        -:   25:#include "pwp_connection.h"
+        -:   26:#include "pwp_local.h"
+        -:   27:#include "linked_list_hashmap.h"
+        -:   28:#include "linked_list_queue.h"
+        -:   29:#include "sparse_counter.h"
+        -:   30:#include "bitstream.h"
+        -:   31:
+        -:   32:/* for upload/download rate identification */
+        -:   33:#include "meanqueue.h"
+        -:   34:
+        -:   35:#include "pwp_connection_private.h"
+        -:   36:
+        -:   37:#define TRUE 1
+        -:   38:#define FALSE 0
+        -:   39:
+        -:   40:#define pwp_msgtype_to_string(m)\
+        -:   41:    PWP_MSGTYPE_CHOKE == (m) ? "CHOKE" :\
+        -:   42:    PWP_MSGTYPE_UNCHOKE == (m) ? "UNCHOKE" :\
+        -:   43:    PWP_MSGTYPE_INTERESTED == (m) ? "INTERESTED" :\
+        -:   44:    PWP_MSGTYPE_UNINTERESTED == (m) ? "UNINTERESTED" :\
+        -:   45:    PWP_MSGTYPE_HAVE == (m) ? "HAVE" :\
+        -:   46:    PWP_MSGTYPE_BITFIELD == (m) ? "BITFIELD" :\
+        -:   47:    PWP_MSGTYPE_REQUEST == (m) ? "REQUEST" :\
+        -:   48:    PWP_MSGTYPE_PIECE == (m) ? "PIECE" :\
+        -:   49:    PWP_MSGTYPE_CANCEL == (m) ? "CANCEL" : "none"\
+        -:   50:
+function __req_hash called 43 returned 100% blocks executed 100%
+       43:   51:static unsigned long __req_hash(const void *obj)
+        -:   52:{
+       43:   53:    const bt_block_t *req = obj;
+       43:   54:    return req->piece_idx + req->len + req->offset;
+        -:   55:}
+        -:   56:
+function __req_cmp called 23 returned 100% blocks executed 100%
+       23:   57:static long __req_cmp(const void *obj, const void *other)
+        -:   58:{
+       23:   59:    const bt_block_t *req1 = obj, *req2 = other;
+       46:   60:    if (req1->piece_idx == req2->piece_idx &&
+branch  0 taken 23 (fallthrough)
+branch  1 taken 0
+branch  2 taken 22 (fallthrough)
+branch  3 taken 1
+       45:   61:        req1->len == req2->len &&
+branch  0 taken 22 (fallthrough)
+branch  1 taken 0
+       22:   62:        req1->offset == req2->offset)
+       22:   63:        return 0;
+        1:   64:    return 1;
+        -:   65:}
+        -:   66:
+function __log called 49 returned 100% blocks executed 60%
+       49:   67:static void __log(pwp_conn_private_t * me, const char *format, ...)
+        -:   68:{
+        -:   69:    char buffer[1000];
+        -:   70:    va_list args;
+        -:   71:
+       49:   72:    if (NULL == me->cb.log)
+branch  0 taken 49 (fallthrough)
+branch  1 taken 0
+       98:   73:        return;
+        -:   74:
+    #####:   75:    sprintf(buffer,"%lx ",(unsigned long)me);
+    #####:   76:    va_start(args, format);
+    #####:   77:    (void)vsnprintf(buffer+strlen(buffer), 1000, format, args);
+        -:   78:#if 0 /* debugging */
+        -:   79:    printf("%s\n", buffer);
+        -:   80:#endif
+    #####:   81:    me->cb.log(me->cb_ctx, me->peer_udata, buffer);
+call    0 never executed
+        -:   82:}
+        -:   83:
+function __disconnect called 7 returned 100% blocks executed 100%
+        7:   84:static void __disconnect(pwp_conn_private_t * me, const char *reason, ...)
+        -:   85:{
+        -:   86:    char buffer[128];
+        -:   87:
+        -:   88:    va_list args;
+        -:   89:
+        7:   90:    va_start(args, reason);
+        7:   91:    (void)vsnprintf(buffer, 128, reason, args);
+        -:   92:#if 0 /* debugging */
+        -:   93:    printf("%s\n", buffer);
+        -:   94:#endif
+        7:   95:    if (me->cb.disconnect)
+branch  0 taken 7 (fallthrough)
+branch  1 taken 0
+        7:   96:       (void)me->cb.disconnect(me->cb_ctx, me->peer_udata, buffer);
+call    0 returned 7
+        7:   97:}
+        -:   98:
+function __send_to_peer called 20 returned 100% blocks executed 75%
+       20:   99:static int __send_to_peer(pwp_conn_private_t * me, void *data, const int len)
+        -:  100:{
+        -:  101:    int ret;
+        -:  102:
+       20:  103:    if (!me->cb.send)
+branch  0 taken 5 (fallthrough)
+branch  1 taken 15
+        5:  104:        return 0;
+        -:  105:
+       15:  106:    if (0 == (ret = me->cb.send(me->cb_ctx, me->peer_udata, data, len))) 
+call    0 returned 15
+branch  1 taken 0 (fallthrough)
+branch  2 taken 15
+        -:  107:    {
+    #####:  108:        __disconnect(me, "peer dropped connection");
+call    0 never executed
+    #####:  109:        return 0;
+        -:  110:    }
+       15:  111:    return 1;
+        -:  112:}
+        -:  113:
+function pwp_conn_get_peer called 0 returned 0% blocks executed 0%
+    #####:  114:void *pwp_conn_get_peer(pwp_conn_t* me_)
+        -:  115:{
+    #####:  116:    pwp_conn_private_t *me = (void*)me_;
+    #####:  117:    return me->peer_udata;
+        -:  118:}
+        -:  119:
+function pwp_conn_set_peer called 0 returned 0% blocks executed 0%
+    #####:  120:void pwp_conn_set_peer(pwp_conn_t* me_, void * peer)
+        -:  121:{
+    #####:  122:    pwp_conn_private_t *me = (void*)me_;
+    #####:  123:    me->peer_udata = peer;
+    #####:  124:}
+        -:  125:
+function pwp_conn_set_progress called 14 returned 100% blocks executed 100%
+       14:  126:void pwp_conn_set_progress(pwp_conn_t* me_, void* counter)
+        -:  127:{
+       14:  128:    pwp_conn_private_t *me = (void*)me_;
+       14:  129:    me->pieces_completed = counter;
+       14:  130:}
+        -:  131:
+function pwp_conn_new called 36 returned 100% blocks executed 77%
+       36:  132:void *pwp_conn_new(void* mem)
+        -:  133:{
+        -:  134:    pwp_conn_private_t *me;
+        -:  135:
+       36:  136:    if (mem)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 36
+        -:  137:    {
+    #####:  138:        me = mem;
+        -:  139:    }
+       36:  140:    else if (!(me = calloc(1, sizeof(pwp_conn_private_t))))
+branch  0 taken 0 (fallthrough)
+branch  1 taken 36
+        -:  141:    {
+    #####:  142:        perror("out of memory");
+call    0 never executed
+    #####:  143:        exit(0);
+call    0 never executed
+        -:  144:    }
+        -:  145:
+       36:  146:    me->bytes_drate = meanqueue_new(10);
+call    0 returned 36
+       36:  147:    me->bytes_urate = meanqueue_new(10);
+call    0 returned 36
+       36:  148:    me->recv_reqs = hashmap_new(__req_hash, __req_cmp, 100);
+call    0 returned 36
+       36:  149:    me->peer_reqs = llqueue_new();
+call    0 returned 36
+       36:  150:    me->reqs = llqueue_new();
+call    0 returned 36
+       36:  151:    me->req_lock = NULL;
+       36:  152:    me->state.flags = PC_IM_CHOKING | PC_PEER_CHOKING;
+       36:  153:    me->pieces_peerhas = sc_init(0);
+call    0 returned 36
+       36:  154:    return me;
+        -:  155:}
+        -:  156:
+function __expunge_their_pending_reqs called 6 returned 100% blocks executed 100%
+        6:  157:static void __expunge_their_pending_reqs(pwp_conn_private_t* me)
+        -:  158:{
+       13:  159:    while (0 < llqueue_count(me->peer_reqs))
+call    0 returned 7
+branch  1 taken 1
+branch  2 taken 6 (fallthrough)
+        -:  160:    {
+        1:  161:        free(llqueue_poll(me->peer_reqs));
+call    0 returned 1
+        -:  162:    }
+        6:  163:}
+        -:  164:
+function __expunge_my_pending_reqs called 6 returned 100% blocks executed 88%
+        6:  165:static void __expunge_my_pending_reqs(pwp_conn_private_t* me)
+        -:  166:{
+        -:  167:    request_t *r;
+        -:  168:    hashmap_iterator_t iter;
+        -:  169:
+        -:  170:    void* rem;
+        6:  171:    rem = llqueue_new();
+call    0 returned 6
+        -:  172:
+       13:  173:    for (hashmap_iterator(me->recv_reqs, &iter);
+call    0 returned 6
+call    1 returned 7
+branch  2 taken 1
+branch  3 taken 6 (fallthrough)
+        7:  174:         (r = hashmap_iterator_next_value(me->recv_reqs, &iter));)
+        -:  175:    {
+        1:  176:        llqueue_offer(rem, r);
+call    0 returned 1
+        -:  177:#if 0
+        -:  178:        r = hashmap_remove(me->recv_reqs, &r->blk);
+        -:  179:        if (me->cb.peer_giveback_block)
+        -:  180:            me->cb.peer_giveback_block(me->cb_ctx, me->peer_udata, &r->blk);
+        -:  181:        free(r);
+        -:  182:#endif
+        -:  183:    }
+        -:  184:
+        -:  185:#if 1
+       13:  186:   while (llqueue_count(rem) > 0)
+call    0 returned 7
+branch  1 taken 1
+branch  2 taken 6 (fallthrough)
+        -:  187:    {
+        1:  188:        r = llqueue_poll(rem);
+call    0 returned 1
+        1:  189:        r = hashmap_remove(me->recv_reqs, &r->blk);
+call    0 returned 1
+        -:  190:
+        1:  191:        assert(r);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  192:
+        1:  193:        if (me->cb.peer_giveback_block)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  194:            me->cb.peer_giveback_block(me->cb_ctx, me->peer_udata, &r->blk);
+call    0 never executed
+        1:  195:        free(r);
+        -:  196:    }
+        -:  197:
+        6:  198:    llqueue_free(rem);
+call    0 returned 6
+        -:  199:#endif
+        6:  200:}
+        -:  201:
+function __expunge_my_old_pending_reqs called 0 returned 0% blocks executed 0%
+    #####:  202:static void __expunge_my_old_pending_reqs(pwp_conn_private_t* me)
+        -:  203:{
+        -:  204:    request_t *r;
+        -:  205:    hashmap_iterator_t iter;
+        -:  206:    void* rem;
+        -:  207:
+    #####:  208:    rem = llqueue_new();
+call    0 never executed
+        -:  209:
+    #####:  210:    for (hashmap_iterator(me->recv_reqs, &iter);
+call    0 never executed
+call    1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:  211:         (r = hashmap_iterator_next_value(me->recv_reqs, &iter));)
+        -:  212:    {
+    #####:  213:        if (r && 10 < me->state.tick - r->tick)
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+        -:  214:        {
+        -:  215:#if 0
+        -:  216:            hashmap_remove(me->recv_reqs, &r->blk);
+        -:  217:            me->cb.peer_giveback_block(me->cb_ctx, me->peer_udata, &r->blk);
+        -:  218:            free(r);
+        -:  219:#endif
+    #####:  220:            llqueue_offer(rem, r);
+call    0 never executed
+        -:  221:        }
+        -:  222:    }
+        -:  223:
+        -:  224:#if 1
+    #####:  225:    while (llqueue_count(rem) > 0)
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  226:    {
+    #####:  227:        r = llqueue_poll(rem);
+call    0 never executed
+    #####:  228:        r = hashmap_remove(me->recv_reqs, &r->blk);
+call    0 never executed
+        -:  229:
+    #####:  230:        assert(me->cb.peer_giveback_block);
+branch  0 never executed
+branch  1 never executed
+call    2 never executed
+    #####:  231:        me->cb.peer_giveback_block(me->cb_ctx, me->peer_udata, &r->blk);
+call    0 never executed
+    #####:  232:        free(r);
+        -:  233:    }
+    #####:  234:    llqueue_free(rem);
+call    0 never executed
+        -:  235:#endif
+    #####:  236:}
+        -:  237:
+function pwp_conn_release called 3 returned 100% blocks executed 100%
+        3:  238:void pwp_conn_release(pwp_conn_t* me_)
+        -:  239:{
+        3:  240:    pwp_conn_private_t *me = (void*)me_;
+        -:  241:
+        3:  242:    __expunge_their_pending_reqs(me);
+call    0 returned 3
+        3:  243:    __expunge_my_pending_reqs(me);
+call    0 returned 3
+        3:  244:    hashmap_free(me->recv_reqs);
+call    0 returned 3
+        3:  245:    llqueue_free(me->peer_reqs);
+call    0 returned 3
+        3:  246:    free(me_);
+        3:  247:}
+        -:  248:
+function pwp_conn_set_piece_info called 31 returned 100% blocks executed 100%
+       31:  249:void pwp_conn_set_piece_info(pwp_conn_t* me_, int num_pieces, int piece_len)
+        -:  250:{
+       31:  251:    pwp_conn_private_t *me = (void*)me_;
+        -:  252:
+       31:  253:    me->num_pieces = num_pieces;
+        -:  254:    //bitfield_init(&me->state.have_bitfield, me->num_pieces);
+       31:  255:    me->piece_len = piece_len;
+       31:  256:}
+        -:  257:
+function pwp_conn_set_cbs called 31 returned 100% blocks executed 100%
+       31:  258:void pwp_conn_set_cbs(pwp_conn_t* me_, pwp_conn_cbs_t* funcs, void* cb_ctx)
+        -:  259:{
+       31:  260:    pwp_conn_private_t *me = (void*)me_;
+       31:  261:    memcpy(&me->cb, funcs, sizeof(pwp_conn_cbs_t));
+       31:  262:    me->cb_ctx = cb_ctx;
+       31:  263:}
+        -:  264:
+function pwp_conn_peer_is_interested called 3 returned 100% blocks executed 100%
+        3:  265:int pwp_conn_peer_is_interested(pwp_conn_t* me_)
+        -:  266:{
+        3:  267:    pwp_conn_private_t *me = (void*)me_;
+        3:  268:    return 0 != (me->state.flags & PC_PEER_INTERESTED);
+        -:  269:}
+        -:  270:
+function pwp_conn_im_choking called 19 returned 100% blocks executed 100%
+       19:  271:int pwp_conn_im_choking(pwp_conn_t* me_)
+        -:  272:{
+       19:  273:    pwp_conn_private_t *me = (void*)me_;
+       19:  274:    return 0 != (me->state.flags & PC_IM_CHOKING);
+        -:  275:}
+        -:  276:
+function pwp_conn_flag_is_set called 3 returned 100% blocks executed 100%
+        3:  277:int pwp_conn_flag_is_set(pwp_conn_t* me_, const int flag)
+        -:  278:{
+        3:  279:    pwp_conn_private_t *me = (void*)me_;
+        3:  280:    return 0 != (me->state.flags & flag);
+        -:  281:}
+        -:  282:
+function pwp_conn_im_choked called 4 returned 100% blocks executed 100%
+        4:  283:int pwp_conn_im_choked(pwp_conn_t* me_)
+        -:  284:{
+        4:  285:    pwp_conn_private_t *me = (void*)me_;
+        4:  286:    return 0 != (me->state.flags & PC_PEER_CHOKING);
+        -:  287:}
+        -:  288:
+function pwp_conn_im_interested called 1 returned 100% blocks executed 100%
+        1:  289:int pwp_conn_im_interested(pwp_conn_t* me_)
+        -:  290:{
+        1:  291:    pwp_conn_private_t *me = (void*)me_;
+        1:  292:    return 0 != (me->state.flags & PC_IM_INTERESTED);
+        -:  293:}
+        -:  294:
+function pwp_conn_set_im_interested called 2 returned 100% blocks executed 100%
+        2:  295:void pwp_conn_set_im_interested(pwp_conn_t* me_)
+        -:  296:{
+        2:  297:    pwp_conn_private_t *me = (void*)me_;
+        -:  298:
+        2:  299:    if (pwp_conn_send_statechange(me_, PWP_MSGTYPE_INTERESTED))
+call    0 returned 2
+branch  1 taken 1 (fallthrough)
+branch  2 taken 1
+        -:  300:    {
+        1:  301:        me->state.flags |= PC_IM_INTERESTED;
+        -:  302:    }
+        2:  303:}
+        -:  304:
+function pwp_conn_choke_peer called 3 returned 100% blocks executed 100%
+        3:  305:void pwp_conn_choke_peer(pwp_conn_t* me_)
+        -:  306:{
+        3:  307:    pwp_conn_private_t *me = (void*)me_;
+        -:  308:
+        3:  309:    me->state.flags |= PC_IM_CHOKING;
+        3:  310:    __expunge_their_pending_reqs(me);
+call    0 returned 3
+        3:  311:    pwp_conn_send_statechange(me_, PWP_MSGTYPE_CHOKE);
+call    0 returned 3
+        3:  312:}
+        -:  313:
+function pwp_conn_unchoke_peer called 1 returned 100% blocks executed 100%
+        1:  314:void pwp_conn_unchoke_peer(pwp_conn_t* me_)
+        -:  315:{
+        1:  316:    pwp_conn_private_t *me = (void*)me_;
+        -:  317:
+        1:  318:    me->state.flags &= ~PC_IM_CHOKING;
+        1:  319:    pwp_conn_send_statechange(me_, PWP_MSGTYPE_UNCHOKE);
+call    0 returned 1
+        1:  320:}
+        -:  321:
+function pwp_conn_get_download_rate called 0 returned 0% blocks executed 0%
+    #####:  322:int pwp_conn_get_download_rate(const pwp_conn_t* me_ __attribute__((__unused__)))
+        -:  323:{
+    #####:  324:    const pwp_conn_private_t *me = (void*)me_;
+    #####:  325:    return meanqueue_get_value(me->bytes_drate);
+call    0 never executed
+        -:  326:}
+        -:  327:
+function pwp_conn_get_upload_rate called 0 returned 0% blocks executed 0%
+    #####:  328:int pwp_conn_get_upload_rate(const pwp_conn_t* me_ __attribute__((__unused__)))
+        -:  329:{
+    #####:  330:    const pwp_conn_private_t *me = (void*)me_;
+    #####:  331:    return meanqueue_get_value(me->bytes_urate);
+call    0 never executed
+        -:  332:}
+        -:  333:
+function pwp_conn_send_statechange called 7 returned 100% blocks executed 49%
+        7:  334:int pwp_conn_send_statechange(pwp_conn_t* me_, const unsigned char msg_type)
+        -:  335:{
+        7:  336:    pwp_conn_private_t *me = (void*)me_;
+        7:  337:    unsigned char data[5], *ptr = data;
+        -:  338:
+        7:  339:    bitstream_write_uint32(&ptr, fe(1));
+call    0 returned 7
+call    1 returned 7
+        7:  340:    bitstream_write_ubyte(&ptr, msg_type);
+call    0 returned 7
+        -:  341:
+        7:  342:    __log(me, "send,%s", pwp_msgtype_to_string(msg_type));
+branch  0 taken 4 (fallthrough)
+branch  1 taken 3
+branch  2 taken 3 (fallthrough)
+branch  3 taken 1
+branch  4 taken 0 (fallthrough)
+branch  5 taken 3
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+branch  9 never executed
+branch 10 never executed
+branch 11 never executed
+branch 12 never executed
+branch 13 never executed
+branch 14 never executed
+branch 15 never executed
+branch 16 never executed
+branch 17 never executed
+call   18 returned 7
+        -:  343:
+        7:  344:    if (!__send_to_peer(me, data, 5))
+call    0 returned 7
+branch  1 taken 4 (fallthrough)
+branch  2 taken 3
+        -:  345:    {
+        4:  346:        return 0;
+        -:  347:    }
+        -:  348:
+        3:  349:    return 1;
+        -:  350:}
+        -:  351:
+function pwp_conn_send_piece called 1 returned 100% blocks executed 78%
+        1:  352:void pwp_conn_send_piece(pwp_conn_t* me_, bt_block_t * req)
+        -:  353:{
+        1:  354:    pwp_conn_private_t *me = (void*)me_;
+        1:  355:    unsigned char *data = NULL;
+        -:  356:    unsigned char *ptr;
+        -:  357:    unsigned int size;
+        -:  358:
+        1:  359:    assert(NULL != me);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  360:    assert(NULL != me->cb.write_block_to_stream);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  361:
+        -:  362:    /* prepare buf */
+        1:  363:    size = 4 + 1 + 4 + 4 + req->len;
+        1:  364:    if (!(data = malloc(size)))
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  365:    {
+    #####:  366:        perror("out of memory");
+call    0 never executed
+    #####:  367:        exit(0);
+call    0 never executed
+        -:  368:    }
+        -:  369:
+        1:  370:    ptr = data;
+        1:  371:    bitstream_write_uint32(&ptr, fe(size - 4));
+call    0 returned 1
+call    1 returned 1
+        1:  372:    bitstream_write_ubyte(&ptr, PWP_MSGTYPE_PIECE);
+call    0 returned 1
+        1:  373:    bitstream_write_uint32(&ptr, fe(req->piece_idx));
+call    0 returned 1
+call    1 returned 1
+        1:  374:    bitstream_write_uint32(&ptr, fe(req->offset));
+call    0 returned 1
+call    1 returned 1
+        1:  375:    me->cb.write_block_to_stream(me->cb_ctx, req, (unsigned char**)&ptr);
+call    0 returned 1
+        1:  376:    __send_to_peer(me, data, size);
+call    0 returned 1
+        -:  377:
+        -:  378:#if 0
+        -:  379:    #define BYTES_SENT 1
+        -:  380:
+        -:  381:    for (ii = req->len; ii > 0;)
+        -:  382:    {
+        -:  383:        int len = BYTES_SENT < ii ? BYTES_SENT : ii;
+        -:  384:
+        -:  385:        bt_piece_write_block_to_str(pce,
+        -:  386:                                    req->offset +
+        -:  387:                                    req->len - ii, len, block);
+        -:  388:        __send_to_peer(me, block, len);
+        -:  389:        ii -= len;
+        -:  390:    }
+        -:  391:#endif
+        -:  392:
+        1:  393:    __log(me, "send,piece,piece_idx=%d offset=%d len=%d",
+call    0 returned 1
+        -:  394:          req->piece_idx, req->offset, req->len);
+        -:  395:
+        1:  396:    free(data);
+        1:  397:}
+        -:  398:
+function pwp_conn_send_have called 1 returned 100% blocks executed 100%
+        1:  399:int pwp_conn_send_have(pwp_conn_t* me_, const int piece_idx)
+        -:  400:{
+        1:  401:    pwp_conn_private_t *me = (void*)me_;
+        1:  402:    unsigned char data[12], *ptr = data;
+        -:  403:
+        1:  404:    bitstream_write_uint32(&ptr, fe(5));
+call    0 returned 1
+call    1 returned 1
+        1:  405:    bitstream_write_ubyte(&ptr, PWP_MSGTYPE_HAVE);
+call    0 returned 1
+        1:  406:    bitstream_write_uint32(&ptr, fe(piece_idx));
+call    0 returned 1
+call    1 returned 1
+        1:  407:    __send_to_peer(me, data, 5+4);
+call    0 returned 1
+        1:  408:    __log(me, "send,have,piece_idx=%d", piece_idx);
+call    0 returned 1
+        1:  409:    return 1;
+        -:  410:}
+        -:  411:
+function pwp_conn_send_request called 10 returned 100% blocks executed 100%
+       10:  412:void pwp_conn_send_request(pwp_conn_t* me_, const bt_block_t * request)
+        -:  413:{
+       10:  414:    pwp_conn_private_t *me = (void*)me_;
+        -:  415:    unsigned char data[32], *ptr;
+        -:  416:
+       10:  417:    ptr = data;
+       10:  418:    bitstream_write_uint32(&ptr, fe(13));
+call    0 returned 10
+call    1 returned 10
+       10:  419:    bitstream_write_ubyte(&ptr, PWP_MSGTYPE_REQUEST);
+call    0 returned 10
+       10:  420:    bitstream_write_uint32(&ptr, fe(request->piece_idx));
+call    0 returned 10
+call    1 returned 10
+       10:  421:    bitstream_write_uint32(&ptr, fe(request->offset));
+call    0 returned 10
+call    1 returned 10
+       10:  422:    bitstream_write_uint32(&ptr, fe(request->len));
+call    0 returned 10
+call    1 returned 10
+       10:  423:    __send_to_peer(me, data, 13+4);
+call    0 returned 10
+       10:  424:    __log(me, "send,request,piece_idx=%d offset=%d len=%d",
+call    0 returned 10
+        -:  425:          request->piece_idx, request->offset, request->len);
+       10:  426:}
+        -:  427:
+function pwp_conn_send_cancel called 1 returned 100% blocks executed 100%
+        1:  428:void pwp_conn_send_cancel(pwp_conn_t* me_, bt_block_t * cancel)
+        -:  429:{
+        1:  430:    pwp_conn_private_t *me = (void*)me_;
+        -:  431:    unsigned char data[32], *ptr;
+        -:  432:
+        1:  433:    ptr = data;
+        1:  434:    bitstream_write_uint32(&ptr, fe(13));
+call    0 returned 1
+call    1 returned 1
+        1:  435:    bitstream_write_ubyte(&ptr, PWP_MSGTYPE_CANCEL);
+call    0 returned 1
+        1:  436:    bitstream_write_uint32(&ptr, fe(cancel->piece_idx));
+call    0 returned 1
+call    1 returned 1
+        1:  437:    bitstream_write_uint32(&ptr, fe(cancel->offset));
+call    0 returned 1
+call    1 returned 1
+        1:  438:    bitstream_write_uint32(&ptr, fe(cancel->len));
+call    0 returned 1
+call    1 returned 1
+        1:  439:    __send_to_peer(me, data, 17);
+call    0 returned 1
+        1:  440:    __log(me, "send,cancel,piece_idx=%d offset=%d len=%d",
+call    0 returned 1
+        -:  441:          cancel->piece_idx, cancel->offset, cancel->len);
+        1:  442:}
+        -:  443:
+function pwp_conn_set_state called 26 returned 100% blocks executed 100%
+       26:  444:void pwp_conn_set_state(pwp_conn_t* me_, const int state)
+        -:  445:{
+       26:  446:    pwp_conn_private_t *me = (void*)me_;
+       26:  447:    me->state.flags = state;
+       26:  448:}
+        -:  449:
+function pwp_conn_get_state called 0 returned 0% blocks executed 0%
+    #####:  450:int pwp_conn_get_state(pwp_conn_t* me_)
+        -:  451:{
+    #####:  452:    pwp_conn_private_t *me = (void*)me_;
+    #####:  453:    return me->state.flags;
+        -:  454:}
+        -:  455:
+function pwp_conn_mark_peer_has_piece called 44 returned 100% blocks executed 100%
+       44:  456:int pwp_conn_mark_peer_has_piece(pwp_conn_t* me_, const int piece_idx)
+        -:  457:{
+       44:  458:    pwp_conn_private_t *me = (void*)me_;
+        -:  459:
+       44:  460:    if (me->num_pieces <= piece_idx || piece_idx < 0)
+branch  0 taken 43 (fallthrough)
+branch  1 taken 1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 43
+        -:  461:    {
+        1:  462:        __disconnect(me, "piece idx fits outside of boundary");
+call    0 returned 1
+        1:  463:        return 0;
+        -:  464:    }
+        -:  465:
+        -:  466:    /* remember that they have this piece */
+        -:  467://    bitfield_mark(&me->state.have_bitfield, piece_idx);
+       43:  468:    sc_mark_complete(me->pieces_peerhas, piece_idx, 1);
+call    0 returned 43
+       43:  469:    if (me->cb.peer_have_piece)
+branch  0 taken 20 (fallthrough)
+branch  1 taken 23
+       20:  470:        me->cb.peer_have_piece(me->cb_ctx, me->peer_udata, piece_idx);
+call    0 returned 20
+        -:  471:
+       43:  472:    return 1;
+        -:  473:}
+        -:  474:
+        -:  475:/**
+        -:  476: * fit the request in the piece size so that we don't break anything */
+function __req_fit called 9 returned 100% blocks executed 100%
+        9:  477:static void __req_fit(bt_block_t * request, const unsigned int piece_len)
+        -:  478:{
+        9:  479:    if (piece_len < request->offset + request->len)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 8
+        -:  480:    {
+        1:  481:        request->len = request->offset + request->len - piece_len;
+        -:  482:    }
+        9:  483:}
+        -:  484:
+function pwp_conn_get_npending_requests called 16 returned 100% blocks executed 100%
+       16:  485:int pwp_conn_get_npending_requests(const pwp_conn_t* me_)
+        -:  486:{
+       16:  487:    const pwp_conn_private_t * me = (void*)me_;
+       16:  488:    return hashmap_count(me->recv_reqs);
+call    0 returned 16
+        -:  489:}
+        -:  490:
+function pwp_conn_get_npending_peer_requests called 4 returned 100% blocks executed 100%
+        4:  491:int pwp_conn_get_npending_peer_requests(const pwp_conn_t* me_)
+        -:  492:{
+        4:  493:    const pwp_conn_private_t * me = (void*)me_;
+        4:  494:    return llqueue_count(me->peer_reqs);
+call    0 returned 4
+        -:  495:}
+        -:  496:
+function pwp_conn_request_block_from_peer called 9 returned 100% blocks executed 100%
+        9:  497:void pwp_conn_request_block_from_peer(pwp_conn_t* me_, bt_block_t * blk)
+        -:  498:{
+        9:  499:    pwp_conn_private_t * me = (void*)me_;
+        -:  500:    request_t *req;
+        -:  501:
+        -:  502:    /*  drop meaningless blocks */
+        -:  503:    if (blk->len < 0)
+        9:  504:        return;
+        -:  505:
+        9:  506:    __req_fit(blk, me->piece_len);
+call    0 returned 9
+        9:  507:    pwp_conn_send_request(me_, blk);
+call    0 returned 9
+        -:  508:
+        -:  509:    /* remember that we requested it */
+        9:  510:    req = malloc(sizeof(request_t));
+        9:  511:    req->tick = me->state.tick;
+        9:  512:    memcpy(&req->blk, blk, sizeof(bt_block_t));
+        9:  513:    hashmap_put(me->recv_reqs, &req->blk, req);
+call    0 returned 9
+        -:  514:
+        -:  515:#if 0 /*  debugging */
+        -:  516:    printf("request block: %d %d %d",
+        -:  517:           blk->piece_idx, blk->offset, blk->len);
+        -:  518:#endif
+        -:  519:}
+        -:  520:
+function pwp_conn_connect_failed called 0 returned 0% blocks executed 0%
+    #####:  521:void pwp_conn_connect_failed(pwp_conn_t* me_)
+        -:  522:{
+    #####:  523:    pwp_conn_private_t *me = (void*)me_;
+        -:  524:
+        -:  525:    /* check if we haven't failed before too many times
+        -:  526:     * we do not want to stay in an end-less loop */
+    #####:  527:    me->state.failed_connections += 1;
+        -:  528:
+    #####:  529:    if (5 < me->state.failed_connections)
+branch  0 never executed
+branch  1 never executed
+        -:  530:    {
+    #####:  531:        me->state.flags = PC_UNCONTACTABLE_PEER;
+        -:  532:    }
+    #####:  533:    assert(0);
+        -:  534:}
+        -:  535:
+function __offer_block called 0 returned 0% blocks executed 0%
+    #####:  536:static void* __offer_block(void* me_, void* b)
+        -:  537:{
+    #####:  538:    pwp_conn_private_t *me = (void*)me_;
+        -:  539:    bt_block_t *b_new;
+        -:  540:
+        -:  541:    /* TODO: replace with mempool/arena */
+    #####:  542:    b_new = malloc(sizeof(bt_block_t));
+    #####:  543:    memcpy(b_new,b,sizeof(bt_block_t));
+    #####:  544:    llqueue_offer(me->reqs, b_new);
+call    0 never executed
+    #####:  545:    return NULL;
+        -:  546:}
+        -:  547:
+function __poll_block called 0 returned 0% blocks executed 0%
+    #####:  548:static void* __poll_block(
+        -:  549:        void* me_,
+        -:  550:        void* __unused __attribute__((__unused__)))
+        -:  551:{
+    #####:  552:    pwp_conn_private_t *me = (void*)me_;
+        -:  553:
+    #####:  554:    return llqueue_poll(me->reqs);
+call    0 never executed
+        -:  555:}
+        -:  556:
+function pwp_conn_offer_block called 0 returned 0% blocks executed 0%
+    #####:  557:void pwp_conn_offer_block(pwp_conn_t* me_, bt_block_t *b)
+        -:  558:{
+    #####:  559:    pwp_conn_private_t* me = (void*)me_;
+        -:  560:
+    #####:  561:    assert(me->cb.call_exclusively);
+branch  0 never executed
+branch  1 never executed
+call    2 never executed
+    #####:  562:    me->cb.call_exclusively(me, me->cb_ctx, &me->req_lock, b, __offer_block);
+call    0 never executed
+    #####:  563:}
+        -:  564:
+function pwp_conn_periodic called 0 returned 0% blocks executed 0%
+    #####:  565:void pwp_conn_periodic(pwp_conn_t* me_)
+        -:  566:{
+    #####:  567:    pwp_conn_private_t *me = (void*)me_;
+        -:  568:
+    #####:  569:    me->state.tick++;
+        -:  570:
+    #####:  571:    __expunge_my_old_pending_reqs(me);
+call    0 never executed
+        -:  572:
+    #####:  573:    if (pwp_conn_flag_is_set(me_, PC_UNCONTACTABLE_PEER))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  574:    {
+    #####:  575:        goto cleanup;
+        -:  576:    }
+        -:  577:
+        -:  578:    /* Send one pending request to the peer */
+    #####:  579:    if (0 < llqueue_count(me->peer_reqs))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  580:    {
+    #####:  581:        bt_block_t* b = llqueue_poll(me->peer_reqs);
+call    0 never executed
+    #####:  582:        pwp_conn_send_piece(me_, b);
+call    0 never executed
+    #####:  583:        free(b);
+        -:  584:    }
+        -:  585:
+        -:  586:    /* unchoke interested peer */
+    #####:  587:    if (pwp_conn_peer_is_interested(me_))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  588:    {
+    #####:  589:        if (pwp_conn_im_choking(me_))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  590:        {
+    #####:  591:            pwp_conn_unchoke(me_);
+call    0 never executed
+        -:  592:        }
+        -:  593:    }
+        -:  594:
+    #####:  595:    if (pwp_conn_im_interested(me_))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  596:    {
+    #####:  597:        if (pwp_conn_im_choked(me_))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  598:        {
+    #####:  599:            goto cleanup;
+        -:  600:        }
+        -:  601:
+        -:  602:        int end, ii;
+        -:  603:        
+        -:  604:        // TODO: turn 10 into configuration value
+        -:  605:        /*  max out pipeline */
+    #####:  606:        end = 10 - pwp_conn_get_npending_requests(me_);
+call    0 never executed
+    #####:  607:        for (ii = 0; ii < end; ii++)
+branch  0 never executed
+branch  1 never executed
+        -:  608:        {
+    #####:  609:            if (0 == me->cb.pollblock(me->cb_ctx, me->peer_udata))
+call    0 never executed
+        -:  610:            {
+        -:  611:                //pwp_conn_request_block_from_peer((pwp_conn_t*)me, &blk);
+        -:  612:            }
+        -:  613:        }
+        -:  614:
+        -:  615:        /* process requests */
+    #####:  616:        if (0 < llqueue_count(me->reqs))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  617:        {
+        -:  618:            /* TODO: probably want to split the request into smaller requests */
+    #####:  619:            void *b = me->cb.call_exclusively(me, me->cb_ctx, &me->req_lock,
+call    0 never executed
+        -:  620:                    NULL, __poll_block);
+    #####:  621:            pwp_conn_request_block_from_peer((pwp_conn_t*)me, b);
+call    0 never executed
+    #####:  622:            free(b);
+        -:  623:        }
+        -:  624:    }
+        -:  625:    else
+        -:  626:    {
+    #####:  627:        pwp_conn_set_im_interested(me_);
+call    0 never executed
+        -:  628:    }
+        -:  629:
+        -:  630:#if 0 /* debugging */
+        -:  631:    printf("pending requests: %lx %d %d\n",
+        -:  632:            me, pwp_conn_get_npending_requests(me),
+        -:  633:            llqueue_count(me->peer_reqs));
+        -:  634:#endif
+        -:  635:
+        -:  636:    /*  measure transfer rate */
+    #####:  637:    meanqueue_offer(me->bytes_drate, me->bytes_downloaded_this_period);
+call    0 never executed
+    #####:  638:    meanqueue_offer(me->bytes_urate, me->bytes_uploaded_this_period);
+call    0 never executed
+    #####:  639:    me->bytes_downloaded_this_period = 0;
+    #####:  640:    me->bytes_uploaded_this_period = 0;
+        -:  641:
+        -:  642:cleanup:
+    #####:  643:    return;
+        -:  644:}
+        -:  645:
+function pwp_conn_peer_has_piece called 13 returned 100% blocks executed 100%
+       13:  646:int pwp_conn_peer_has_piece(pwp_conn_t* me_, const int piece_idx)
+        -:  647:{
+       13:  648:    pwp_conn_private_t *me = (void*)me_;
+        -:  649:    //return bitfield_is_marked(&me->state.have_bitfield, piece_idx);
+       13:  650:    return sc_have(me->pieces_peerhas, piece_idx, 1);
+call    0 returned 13
+        -:  651:}
+        -:  652:
+function pwp_conn_keepalive called 0 returned 0% blocks executed 0%
+    #####:  653:void pwp_conn_keepalive(pwp_conn_t* me_ __attribute__((__unused__)))
+        -:  654:{
+        -:  655:    // TODO
+    #####:  656:}
+        -:  657:
+function pwp_conn_choke called 3 returned 100% blocks executed 100%
+        3:  658:void pwp_conn_choke(pwp_conn_t* me_)
+        -:  659:{
+        3:  660:    pwp_conn_private_t* me = (void*)me_;
+        -:  661:
+        3:  662:    __log(me, "read,choke");
+call    0 returned 3
+        3:  663:    me->state.flags |= PC_PEER_CHOKING;
+        3:  664:    __expunge_my_pending_reqs(me);
+call    0 returned 3
+        3:  665:}
+        -:  666:
+function pwp_conn_unchoke called 1 returned 100% blocks executed 100%
+        1:  667:void pwp_conn_unchoke(pwp_conn_t* me_)
+        -:  668:{
+        1:  669:    pwp_conn_private_t* me = (void*)me_;
+        -:  670:
+        1:  671:    __log(me, "read,unchoke");
+call    0 returned 1
+        1:  672:    me->state.flags &= ~PC_PEER_CHOKING;
+        1:  673:}
+        -:  674:
+function pwp_conn_interested called 2 returned 100% blocks executed 100%
+        2:  675:void pwp_conn_interested(pwp_conn_t* me_)
+        -:  676:{
+        2:  677:    pwp_conn_private_t* me = (void*)me_;
+        -:  678:
+        2:  679:    __log(me, "read,interested");
+call    0 returned 2
+        2:  680:    me->state.flags |= PC_PEER_INTERESTED;
+        2:  681:}
+        -:  682:
+function pwp_conn_uninterested called 1 returned 100% blocks executed 100%
+        1:  683:void pwp_conn_uninterested(pwp_conn_t* me_)
+        -:  684:{
+        1:  685:    pwp_conn_private_t* me = (void*)me_;
+        -:  686:
+        1:  687:    __log(me, "read,uninterested");
+call    0 returned 1
+        1:  688:    me->state.flags &= ~PC_PEER_INTERESTED;
+        1:  689:}
+        -:  690:
+function pwp_conn_have called 4 returned 100% blocks executed 100%
+        4:  691:void pwp_conn_have(pwp_conn_t* me_, msg_have_t* have)
+        -:  692:{
+        4:  693:    pwp_conn_private_t* me = (void*)me_;
+        -:  694:
+        4:  695:    __log(me, "read,have,piece_idx=%d", have->piece_idx);
+call    0 returned 4
+        -:  696:
+        4:  697:    if (1 == pwp_conn_mark_peer_has_piece(me_, have->piece_idx))
+call    0 returned 4
+        -:  698:    {
+        -:  699://      assert(pwp_conn_peer_has_piece(me, piece_idx));
+        -:  700:    }
+        -:  701:
+        -:  702:    /* tell the peer we are intested if we don't have this piece */
+        4:  703:    if (!sc_have(me->pieces_completed, have->piece_idx, 1))
+call    0 returned 4
+branch  1 taken 2 (fallthrough)
+branch  2 taken 2
+        -:  704:    {
+        -:  705:        // TODO: do we need to be interested if we are already?
+        2:  706:        pwp_conn_set_im_interested(me_);
+call    0 returned 2
+        -:  707:    }
+        4:  708:}
+        -:  709:
+function pwp_conn_bitfield called 2 returned 100% blocks executed 100%
+        2:  710:void pwp_conn_bitfield(pwp_conn_t* me_, msg_bitfield_t* bitfield)
+        -:  711:{
+        2:  712:    pwp_conn_private_t* me = (void*)me_;
+        -:  713:
+        -:  714:     /* A peer MUST send this message immediately after the handshake
+        -:  715:     * operation, and MAY choose not to send it if it has no pieces at
+        -:  716:     * all. This message MUST not be sent at any other time during the
+        -:  717:     * communication. */
+        -:  718:
+        -:  719:#if 0
+        -:  720:    if (me->num_pieces < bitfield_get_length(&bitfield->bf))
+        -:  721:    {
+        -:  722:        __disconnect(me, "too many pieces within bitfield");
+        -:  723:    }
+        -:  724:#endif
+        -:  725:
+        2:  726:    if (pwp_conn_flag_is_set(me_, PC_BITFIELD_RECEIVED))
+call    0 returned 2
+branch  1 taken 1 (fallthrough)
+branch  2 taken 1
+        -:  727:    {
+        1:  728:        __disconnect(me, "peer sent bitfield twice");
+call    0 returned 1
+        -:  729:    }
+        -:  730:
+        2:  731:    me->state.flags |= PC_BITFIELD_RECEIVED;
+        -:  732:
+        -:  733:    int ii;
+        -:  734:
+       42:  735:    for (ii = 0; ii < me->num_pieces; ii++)
+branch  0 taken 40
+branch  1 taken 2 (fallthrough)
+        -:  736:    {
+       40:  737:        if (bitfield_is_marked(&bitfield->bf,ii))
+call    0 returned 40
+branch  1 taken 40 (fallthrough)
+branch  2 taken 0
+       40:  738:            pwp_conn_mark_peer_has_piece(me_, ii);
+call    0 returned 40
+        -:  739:    }
+        -:  740:
+        -:  741:    //char *str;
+        -:  742:    //str = bitfield_str(&me->state.have_bitfield);
+        -:  743:    //__log(me, "read,bitfield,%s", str);
+        -:  744:    //free(str);
+        2:  745:}
+        -:  746:
+function pwp_conn_request called 9 returned 100% blocks executed 96%
+        9:  747:int pwp_conn_request(pwp_conn_t* me_, bt_block_t *r)
+        -:  748:{
+        9:  749:    pwp_conn_private_t* me = (void*)me_;
+        -:  750:
+        9:  751:    __log(me, "read,request,piece_idx=%d offset=%d len=%d",
+call    0 returned 9
+        -:  752:          r->piece_idx, r->offset, r->len);
+        -:  753:
+        -:  754:    /* check that the client doesn't request when they are choked */
+        9:  755:    if (pwp_conn_im_choking(me_))
+call    0 returned 9
+branch  1 taken 1 (fallthrough)
+branch  2 taken 8
+        -:  756:    {
+        1:  757:        __disconnect(me, "peer requested when they were choked");
+call    0 returned 1
+        1:  758:        return 0;
+        -:  759:    }
+        -:  760:
+        -:  761:    /* We're choking - we aren't obligated to respond to this request */
+        8:  762:    if (pwp_conn_im_choking(me_))
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+        -:  763:    {
+    #####:  764:        return 0;
+        -:  765:    }
+        -:  766:
+        -:  767:    /* Ensure we have correct piece_idx */
+        8:  768:    if (me->num_pieces < r->piece_idx)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 7
+        -:  769:    {
+        1:  770:        __disconnect(me, "requested piece %d has invalid idx", r->piece_idx);
+call    0 returned 1
+        1:  771:        return 0;
+        -:  772:    }
+        -:  773:
+        -:  774:    /* Ensure that we have this piece */
+        7:  775:    if (!sc_have(me->pieces_completed, r->piece_idx, 1))
+call    0 returned 7
+branch  1 taken 1 (fallthrough)
+branch  2 taken 6
+        -:  776:    {
+        1:  777:        __disconnect(me, "requested piece %d is not available", r->piece_idx);
+call    0 returned 1
+        1:  778:        return 0;
+        -:  779:    }
+        -:  780:
+        -:  781:    /* Ensure that the peer needs this piece.
+        -:  782:     * If the peer doesn't need the piece then that means the peer is
+        -:  783:     * potentially invalid */
+        6:  784:    if (pwp_conn_peer_has_piece(me_, r->piece_idx))
+call    0 returned 6
+branch  1 taken 1 (fallthrough)
+branch  2 taken 5
+        -:  785:    {
+        1:  786:        __disconnect(me, "peer requested pce%d which they had", r->piece_idx);
+call    0 returned 1
+        1:  787:        return 0;
+        -:  788:    }
+        -:  789:
+        -:  790:    /* Ensure that block request length is valid  */
+        5:  791:    if (r->len == 0 || me->piece_len < r->offset + r->len)
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 4
+        -:  792:    {
+        1:  793:        __disconnect(me, "invalid block request"); 
+call    0 returned 1
+        1:  794:        return 0;
+        -:  795:    }
+        -:  796:
+        -:  797:    /* Ensure that we have completed this piece.
+        -:  798:     * The peer should know if we have completed this piece or not, so
+        -:  799:     * asking for it is an indicator of a invalid peer. */
+        -:  800:    #if 0
+        -:  801:    assert(NULL != me->cb.piece_is_complete);
+        -:  802:    if (0 == me->cb.piece_is_complete(me->cb_ctx, pce))
+        -:  803:    {
+        -:  804:        __disconnect(me, "requested piece %d is not completed", r->piece_idx);
+        -:  805:        return 0;
+        -:  806:    }
+        -:  807:    #endif
+        -:  808:
+        -:  809:    /* Append block to our pending request queue. */
+        -:  810:    /* Don't append the block twice. */
+        4:  811:    if (!llqueue_get_item_via_cmpfunction(me->peer_reqs,r,(void*)__req_cmp))
+call    0 returned 4
+branch  1 taken 3 (fallthrough)
+branch  2 taken 1
+        -:  812:    {
+        3:  813:        bt_block_t* b = malloc(sizeof(bt_block_t));
+        3:  814:        memcpy(b,r, sizeof(bt_block_t));
+        3:  815:        llqueue_offer(me->peer_reqs,b);
+call    0 returned 3
+        -:  816:    }
+        -:  817:
+        4:  818:    return 1;
+        -:  819:}
+        -:  820:
+function pwp_conn_cancel called 1 returned 100% blocks executed 100%
+        1:  821:void pwp_conn_cancel(pwp_conn_t* me_, bt_block_t *cancel)
+        -:  822:{
+        1:  823:    pwp_conn_private_t* me = (void*)me_;
+        -:  824:    bt_block_t *removed;
+        -:  825:
+        1:  826:    __log(me, "read,cancel,piece_idx=%d offset=%d length=%d",
+call    0 returned 1
+        -:  827:          cancel->piece_idx, cancel->offset, cancel->len);
+        -:  828:
+        1:  829:    removed = llqueue_remove_item_via_cmpfunction(
+call    0 returned 1
+        -:  830:            me->peer_reqs, cancel, (void*)__req_cmp);
+        1:  831:    free(removed);
+        -:  832://  queue_remove(peer->request_queue);
+        1:  833:}
+        -:  834:
+function pwp_conn_block_request_is_pending called 5 returned 100% blocks executed 100%
+        5:  835:int pwp_conn_block_request_is_pending(void* pc, bt_block_t *b)
+        -:  836:{
+        5:  837:    pwp_conn_private_t* me = pc;
+        5:  838:    return NULL != hashmap_get(me->recv_reqs, b);
+call    0 returned 5
+        -:  839:}
+        -:  840:
+        -:  841:/**
+        -:  842: * We keep a record of the block requests we made.
+        -:  843: * Remove the request represented by this block */
+function __conn_remove_pending_request called 8 returned 100% blocks executed 81%
+        8:  844:static void __conn_remove_pending_request(pwp_conn_private_t* me, const bt_block_t *pb)
+        -:  845:{
+        -:  846:    request_t *r;
+        -:  847:    void *add;
+        -:  848:
+        -:  849:    /* remove pending request */
+        8:  850:    if ((r = hashmap_remove(me->recv_reqs, &pb)))
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+        -:  851:    {
+    #####:  852:        free(r);
+        8:  853:        return;
+        -:  854:    }
+        -:  855:
+        8:  856:    add = llqueue_new();
+call    0 returned 8
+        -:  857:
+        -:  858:#if 0
+        -:  859:        /* ensure that the peer is sending us a piece we requested */
+        -:  860:        __disconnect(me, "err: received a block we did not request: %d %d %d\n",
+        -:  861:                     piece->block.piece_idx,
+        -:  862:                     piece->block.offset,
+        -:  863:                     piece->block.len);
+        -:  864:        return 0;
+        -:  865:#endif
+        -:  866:
+        -:  867:    hashmap_iterator_t iter;
+       24:  868:    for (hashmap_iterator(me->recv_reqs, &iter);
+call    0 returned 8
+call    1 returned 16
+branch  2 taken 8
+branch  3 taken 8 (fallthrough)
+       16:  869:         (r = hashmap_iterator_next_value(me->recv_reqs, &iter));)
+        -:  870:    {
+        8:  871:        llqueue_offer(add,r);
+call    0 returned 8
+        -:  872:    }
+        -:  873:
+        -:  874:    /* find out if this block is part of another request */
+       24:  875:    while (llqueue_count(add) > 0)
+call    0 returned 16
+branch  1 taken 8
+branch  2 taken 8 (fallthrough)
+        -:  876:    {
+        -:  877:        bt_block_t *rb;
+        -:  878:
+        8:  879:        r = llqueue_poll(add);
+call    0 returned 8
+        8:  880:        rb = &r->blk;
+        -:  881:
+        8:  882:        if (r->blk.piece_idx != pb->piece_idx) continue;
+branch  0 taken 0 (fallthrough)
+branch  1 taken 8
+        -:  883:
+        -:  884:        /*  piece completely eats request */
+       14:  885:        if (pb->offset <= rb->offset &&
+branch  0 taken 6 (fallthrough)
+branch  1 taken 2
+branch  2 taken 5 (fallthrough)
+branch  3 taken 1
+        6:  886:            rb->offset + rb->len <= pb->offset + pb->len)
+        -:  887:        {
+        5:  888:            r = hashmap_remove(me->recv_reqs, &r->blk);
+call    0 returned 5
+        5:  889:            assert(r);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+call    2 never executed
+        5:  890:            free(r);
+        -:  891:        }
+        -:  892:        /*
+        -:  893:         * Piece in the middle
+        -:  894:         * |00000LXL00000|
+        -:  895:         */
+        5:  896:        else if (rb->offset < pb->offset &&
+branch  0 taken 2 (fallthrough)
+branch  1 taken 1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 1
+        2:  897:                pb->offset + pb->len < rb->offset + rb->len)
+        1:  898:        {
+        -:  899:            request_t *n;
+        -:  900:
+        1:  901:            n = malloc(sizeof(request_t));
+        1:  902:            n->tick = r->tick;
+        1:  903:            n->blk.piece_idx = rb->piece_idx;
+        1:  904:            n->blk.offset = pb->offset + pb->len;
+        1:  905:            n->blk.len = rb->len - pb->len - (pb->offset - rb->offset);
+        1:  906:            assert((int)n->blk.len != 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  907:            assert((int)n->blk.len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  908:            hashmap_put(me->recv_reqs, &n->blk, n);
+call    0 returned 1
+        1:  909:            assert(n->blk.len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  910:
+        1:  911:            hashmap_remove(me->recv_reqs, &r->blk);
+call    0 returned 1
+        -:  912:
+        1:  913:            rb->len = pb->offset - rb->offset;
+        1:  914:            assert((int)rb->len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  915:            hashmap_put(me->recv_reqs, &r->blk, r);
+call    0 returned 1
+        1:  916:            assert(rb->len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  917:        }
+        -:  918:        /*  piece splits it on the left side */
+        4:  919:        else if (rb->offset < pb->offset + pb->len &&
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 1
+        2:  920:            pb->offset + pb->len < rb->offset + rb->len)
+        -:  921:        {
+        1:  922:            hashmap_remove(me->recv_reqs, &r->blk);
+call    0 returned 1
+        -:  923:
+        -:  924:            /*  resize and return to hashmap */
+        1:  925:            rb->len -= (pb->offset + pb->len) - rb->offset;
+        1:  926:            rb->offset = pb->offset + pb->len;
+        1:  927:            assert((int)rb->len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  928:            hashmap_put(me->recv_reqs, &r->blk, r);
+call    0 returned 1
+        -:  929:        }
+        -:  930:        /*  piece splits it on the right side */
+        2:  931:        else if (rb->offset < pb->offset &&
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+        2:  932:            pb->offset < rb->offset + rb->len &&
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  933:            rb->offset + rb->len <= pb->offset + pb->len)
+        -:  934:        {
+        1:  935:            hashmap_remove(me->recv_reqs, &r->blk);
+call    0 returned 1
+        -:  936:
+        -:  937:            /*  resize and return to hashmap */
+        1:  938:            rb->len = pb->offset - rb->offset;
+        1:  939:            assert((int)rb->len > 0);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        1:  940:            hashmap_put(me->recv_reqs, &r->blk, r);
+call    0 returned 1
+        -:  941:        }
+        -:  942:    }
+        -:  943:
+        8:  944:    llqueue_free(add);
+call    0 returned 8
+        -:  945:}
+        -:  946:
+function pwp_conn_piece called 8 returned 100% blocks executed 86%
+        8:  947:int pwp_conn_piece(pwp_conn_t* me_, msg_piece_t *p)
+        -:  948:{
+        8:  949:    pwp_conn_private_t* me = (void*)me_;
+        -:  950:
+        8:  951:    assert(me->cb.pushblock);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 8
+call    2 never executed
+        -:  952:
+        8:  953:    __log(me, "read,piece,piece_idx=%d offset=%d length=%d",
+call    0 returned 8
+        -:  954:          p->blk.piece_idx,
+        -:  955:          p->blk.offset,
+        -:  956:          p->blk.len);
+        -:  957:
+        8:  958:    __conn_remove_pending_request(me, &p->blk);
+call    0 returned 8
+        8:  959:    me->cb.pushblock(me->cb_ctx, me->peer_udata, &p->blk, p->data);
+call    0 returned 8
+        8:  960:    me->bytes_downloaded_this_period += p->blk.len;
+        8:  961:    return 1;
+        -:  962:}
+        -:  963:

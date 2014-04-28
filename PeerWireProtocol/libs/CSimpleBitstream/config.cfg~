@@ -1,0 +1,6 @@
+sourceRootDir="/home/jay/Desktop/Mutate/small-put/CSimpleBitstream";
+source = ("linked_list_queue.c");
+outputDir="";
+testingFramework="cutest";
+CuTestLibSource="CuTest.c";
+executablePath="tests";

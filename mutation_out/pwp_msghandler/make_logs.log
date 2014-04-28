@@ -1,0 +1,55 @@
+
+--> MUTATION :: REC2A_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+gcc -g -fno-omit-frame-pointer -fno-common -fsigned-char -fprofile-arcs -ftest-coverage -Ilibs/CHashMapViaLinkedList -Ilibs/CBitfield -Ilibs/CSimpleBitstream -Ilibs/CLinkedListQueue -Ilibs/CMeanQueue -Ilibs/CSparseCounter  -I. -o tests_connection main_connection.c pwp_connection.o pwp_msghandler.c pwp_bitfield.c pwp_util.c tests/test_connection.c tests/test_connection_send.c tests/mock_caller.c tests/mock_piece.c tests/bt_diskmem.c tests/CuTest.c libs/CHashMapViaLinkedList/linked_list_hashmap.c libs/CBitfield/bitfield.c libs/CSimpleBitstream/bitstream.c libs/CLinkedListQueue/linked_list_queue.c libs/CMeanQueue/meanqueue.c libs/CSparseCounter/sparse_counter.c
+./tests_connection
+make: *** [tests_connection] Segmentation fault (core dumped)
+make: *** Deleting file `tests_connection'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+
+--> MUTATION :: REDAWN_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+gcc -g -fno-omit-frame-pointer -fno-common -fsigned-char -fprofile-arcs -ftest-coverage -Ilibs/CHashMapViaLinkedList -Ilibs/CBitfield -Ilibs/CSimpleBitstream -Ilibs/CLinkedListQueue -Ilibs/CMeanQueue -Ilibs/CSparseCounter  -I. -o tests_connection main_connection.c pwp_connection.o pwp_msghandler.c pwp_bitfield.c pwp_util.c tests/test_connection.c tests/test_connection_send.c tests/mock_caller.c tests/mock_piece.c tests/bt_diskmem.c tests/CuTest.c libs/CHashMapViaLinkedList/linked_list_hashmap.c libs/CBitfield/bitfield.c libs/CSimpleBitstream/bitstream.c libs/CLinkedListQueue/linked_list_queue.c libs/CMeanQueue/meanqueue.c libs/CSparseCounter/sparse_counter.c
+./tests_connection
+make: *** [tests_connection] Segmentation fault (core dumped)
+make: *** Deleting file `tests_connection'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+
+--> MUTATION :: REBSLO_0.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+gcc -g -fno-omit-frame-pointer -fno-common -fsigned-char -fprofile-arcs -ftest-coverage -Ilibs/CHashMapViaLinkedList -Ilibs/CBitfield -Ilibs/CSimpleBitstream -Ilibs/CLinkedListQueue -Ilibs/CMeanQueue -Ilibs/CSparseCounter  -I. -o tests_connection main_connection.c pwp_connection.o pwp_msghandler.c pwp_bitfield.c pwp_util.c tests/test_connection.c tests/test_connection_send.c tests/mock_caller.c tests/mock_piece.c tests/bt_diskmem.c tests/CuTest.c libs/CHashMapViaLinkedList/linked_list_hashmap.c libs/CBitfield/bitfield.c libs/CSimpleBitstream/bitstream.c libs/CLinkedListQueue/linked_list_queue.c libs/CMeanQueue/meanqueue.c libs/CSparseCounter/sparse_counter.c
+./tests_connection
+tests_connection: pwp_msghandler.c:202: pwp_msghandler_dispatch_from_buffer: Assertion `me -> process_item' failed.
+ running TestPWP_init_has_us_choked
+ running TestPWP_init_not_interested
+ running TestPWP_choke_sets_as_choked
+ running TestPWP_unchoke_sets_as_unchoked
+ running TestPWP_unchoke_setget_flag
+ running TestPWP_send_state_change_is_wellformed
+ running TestPWP_send_have_is_wellformed
+ running TestPWP_send_bitField_is_wellformed
+ running TestPWP_send_request_is_wellformed
+ running TestPWP_send_piece_is_wellformed
+ running TestPWP_send_cancel_is_wellformed
+ running TestPWP_read_havemsg_marks_peer_as_having_piece
+make: *** [tests_connection] Aborted (core dumped)
+make: *** Deleting file `tests_connection'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+
+--> MUTATION :: REDAWZ_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+gcc -g -fno-omit-frame-pointer -fno-common -fsigned-char -fprofile-arcs -ftest-coverage -Ilibs/CHashMapViaLinkedList -Ilibs/CBitfield -Ilibs/CSimpleBitstream -Ilibs/CLinkedListQueue -Ilibs/CMeanQueue -Ilibs/CSparseCounter  -I. -o tests_connection main_connection.c pwp_connection.o pwp_msghandler.c pwp_bitfield.c pwp_util.c tests/test_connection.c tests/test_connection_send.c tests/mock_caller.c tests/mock_piece.c tests/bt_diskmem.c tests/CuTest.c libs/CHashMapViaLinkedList/linked_list_hashmap.c libs/CBitfield/bitfield.c libs/CSimpleBitstream/bitstream.c libs/CLinkedListQueue/linked_list_queue.c libs/CMeanQueue/meanqueue.c libs/CSparseCounter/sparse_counter.c
+./tests_connection
+make: *** [tests_connection] Segmentation fault (core dumped)
+make: *** Deleting file `tests_connection'
+make: Leaving directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+
+--> MUTATION :: REC2A_1.c
+
+make: Entering directory `/home/jay/Desktop/Mutate/Mutate/PeerWireProtocol'
+gcc -g -fno-omit-frame-pointer -fno-common -fsigned-char -fprofile-arcs -ftest-coverage -Ilibs/CHashMapViaLinkedList -Ilibs/CBitfield -Ilibs/CSimpleBitstream -Ilibs/CLinkedListQueue -Ilibs/CMeanQueue -Ilibs/CSparseCounter  -I. -o tests_connection main_connection.c pwp_connection.o pwp_msghandler.c pwp_bitfield.c pwp_util.c tests/test_connection.c tests/test_connection_send.c tests/mock_caller.c tests/mock_piece.c tests/bt_diskmem.c tests/CuTest.c libs/CHashMapViaLinkedList/linked_list_hashmap.c libs/CBitfield/bitfield.c libs/CSimpleBitstream/bitstream.c libs/CLinkedListQueue/linked_list_queue.c libs/CMeanQueue/meanqueue.c libs/CSparseCounter/sparse_counter.c
+make: *** [tests_connection] Interrupt
