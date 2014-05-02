@@ -1,0 +1,65 @@
+
+**** Mutant: REC2A_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REDAWN_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSPO_2.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+
+**** Mutant: REBSLO_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REDAWZ_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2A_1.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REBSLO_2.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: REC2M_2.c ****
+status: (killed)
+description: (3) of (21) tests failed:
+1) TesthashmapqQuadratic_IncreaseCapacityDoesNotBreakhashmapq: test_quadratic_probing_hashmap.c:259: assert failed
+2) TesthashmapqQuadratic_IterateHandlesCollisions: test_quadratic_probing_hashmap.c:421: assert failed
+3) TesthashmapqQuadratic_IterateAndRemoveDoesntBreakIteration: test_quadratic_probing_hashmap.c:473: assert failed
+CFG Deviation : 58.11%
+New Valgrind errors: 302
+
+**** Mutant: REBSPO_0.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+
+**** Mutant: FPIBO_0.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+New Valgrind errors: 22
+
+**** Mutant: RMFS_1.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+
+**** Mutant: RESOTPE_0.c ****
+status: (killed)
+description: mutation caused a runtime error
+
+**** Mutant: RMFS_0.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+
+**** Mutant: FPDBO_0.c ****
+status: (survived!!)
+CFG Deviation : 0.00%
+New Valgrind errors: 22
+
+**** Mutant: REC2A_2.c ****

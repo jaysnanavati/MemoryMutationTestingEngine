@@ -375,6 +375,7 @@ void printValgrindError(ValgrindError *valgrindError,int i){
 }
 
 void printValgrindResult(char*mutation_code,ValgrindResult*valgrindResult){
+  
   int i;
   mutation_results = fopen(mutation_results_path,"a+");
   
