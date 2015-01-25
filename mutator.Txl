@@ -33,10 +33,10 @@ function driver
 		  [mutateCalloc 8]
 		  [mutateAlloca 10]
 		  [mutateRealloc 12]
-		  [mutateMalloc 14]
-		  [mutateDynamicAllocation 26]
-		  [mutateSizeof 28]
-		  [mutateVLA 29]
+		  [mutateMalloc 15]
+		  [mutateDynamicAllocation 27]
+		  [mutateSizeof 29]
+		  [mutateVLA 30]
 	
 end function
 
@@ -148,6 +148,9 @@ rule mutateMalloc defValMax [number]
 		  [generateMutant "REDAWZ_3" 14]
 		  [prepareNextMutationOP 14]
 		  
+		  [replace_malloc_W_N 15]
+		  [generateMutant "REDAWN_3" 15]
+		  [prepareNextMutationOP 15]
 end rule
 
 rule mutateDynamicAllocation defValMax [number]
@@ -157,53 +160,53 @@ rule mutateDynamicAllocation defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [increment_calloc_size 15]
-		  [generateMutant "REBSPO_" 15]
-		  [prepareNextMutationOP 15]
-		  
-		  [increment_alloca_size 16]
-		  [generateMutant "REBSPO_1" 16]
+		  [increment_calloc_size 16]
+		  [generateMutant "REBSPO_" 16]
 		  [prepareNextMutationOP 16]
 		  
-		  [increment_realloc_size 17]
-		  [generateMutant "REBSPO_2" 17]
+		  [increment_alloca_size 17]
+		  [generateMutant "REBSPO_1" 17]
 		  [prepareNextMutationOP 17]
 		  
-		  [increment_malloc_size 18]
-		  [generateMutant "REBSPO_3" 18]
+		  [increment_realloc_size 18]
+		  [generateMutant "REBSPO_2" 18]
 		  [prepareNextMutationOP 18]
 		  
-		  [decrement_calloc_size 19]
-		  [generateMutant "REBSLO_" 19]
+		  [increment_malloc_size 19]
+		  [generateMutant "REBSPO_3" 19]
 		  [prepareNextMutationOP 19]
 		  
-		  [decrement_alloca_size 20]
-		  [generateMutant "REBSLO_1" 20]
+		  [decrement_calloc_size 20]
+		  [generateMutant "REBSLO_" 20]
 		  [prepareNextMutationOP 20]
 		  
-		  [decrement_realloc_size 21]
-		  [generateMutant "REBSLO_2" 21]
+		  [decrement_alloca_size 21]
+		  [generateMutant "REBSLO_1" 21]
 		  [prepareNextMutationOP 21]
 		  
-		  [decrement_malloc_size 22]
-		  [generateMutant "REBSLO_3" 22]
+		  [decrement_realloc_size 22]
+		  [generateMutant "REBSLO_2" 22]
 		  [prepareNextMutationOP 22]
 		  
-		  [replace_calloc_size_W_NO 23]
-		  [generateMutant "REBSNO_" 23]
+		  [decrement_malloc_size 23]
+		  [generateMutant "REBSLO_3" 23]
 		  [prepareNextMutationOP 23]
 		  
-		  [replace_alloca_size_W_NO 24]
-		  [generateMutant "REBSNO_1" 24]
+		  [replace_calloc_size_W_NO 24]
+		  [generateMutant "REBSNO_" 24]
 		  [prepareNextMutationOP 24]
 		  
-		  [replace_realloc_size_W_NO 25]
-		  [generateMutant "REBSNO_2" 25]
+		  [replace_alloca_size_W_NO 25]
+		  [generateMutant "REBSNO_1" 25]
 		  [prepareNextMutationOP 25]
 		  
-		  [replace_malloc_size_W_NO 26]
-		  [generateMutant "REBSNO_3" 26]
+		  [replace_realloc_size_W_NO 26]
+		  [generateMutant "REBSNO_2" 26]
 		  [prepareNextMutationOP 26]
+		  
+		  [replace_malloc_size_W_NO 27]
+		  [generateMutant "REBSNO_3" 27]
+		  [prepareNextMutationOP 27]
 end rule
 
 rule mutateSizeof defValMax [number]
@@ -213,13 +216,13 @@ rule mutateSizeof defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_sizeof_W_pointer 27]
-		  [generateMutant "RESOTPE_" 27]
-		  [prepareNextMutationOP 27]
-		  
-		  [replace_sizeof_W_non_pointer 28]
-		  [generateMutant "REMSOTP_" 28]
+		  [replace_sizeof_W_pointer 28]
+		  [generateMutant "RESOTPE_" 28]
 		  [prepareNextMutationOP 28]
+		  
+		  [replace_sizeof_W_non_pointer 29]
+		  [generateMutant "REMSOTP_" 29]
+		  [prepareNextMutationOP 29]
 end rule
 
 rule mutateVLA defValMax [number]
@@ -229,9 +232,9 @@ rule mutateVLA defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_sizeof_VLA_W_NO 29]
-		  [generateMutant "REVLANA_" 29]
-		  [prepareNextMutationOP 29]
+		  [replace_sizeof_VLA_W_NO 30]
+		  [generateMutant "REVLANA_" 30]
+		  [prepareNextMutationOP 30]
 		  
 end rule
 
@@ -242,7 +245,7 @@ rule replace_malloc_W_N defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AE[list argument_expression] ')
+		A[any]'malloc '( AE[list argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -259,14 +262,14 @@ rule replace_malloc_W_alloca defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AL [list argument_expression] ')
+		A[any]'malloc '( AL [list argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'alloca '( AL ')
+		A'alloca '( AL ')
 end rule
 
 rule replace_malloc_size_W_zero defValMax [number]
@@ -276,14 +279,14 @@ rule replace_malloc_size_W_zero defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AL [list argument_expression] ')
+		A[any]'malloc '( AL [list argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'malloc '( 0 ')
+		A'malloc '( 0 ')
 end rule
 
 rule increment_malloc_size defValMax [number]
@@ -293,7 +296,7 @@ rule increment_malloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AE[assignment_expression] ')
+		A[any]'malloc '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -301,7 +304,7 @@ rule increment_malloc_size defValMax [number]
 	export skip 1
 	construct E [expression] AE
 	by
-		'malloc '( '(E')+1 ')
+		A'malloc '( '(E')+1 ')
 end rule
 
 rule decrement_malloc_size defValMax [number]
@@ -311,7 +314,7 @@ rule decrement_malloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AE[assignment_expression] ')
+		A[any]'malloc '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -319,7 +322,7 @@ rule decrement_malloc_size defValMax [number]
 	export skip 1
 	construct E [expression] AE
 	by
-		'malloc '( '(E')-1 ')
+		A'malloc '( '(E')-1 ')
 end rule
 
 rule replace_malloc_size_W_NO defValMax [number]
@@ -329,14 +332,14 @@ rule replace_malloc_size_W_NO defValMax [number]
 	import callVal [number]
 	
 	replace $[assignment_expression]
-		'malloc '( AE[assignment_expression] ')
+		A[any]'malloc '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'malloc '( -1')
+		A'malloc '( -1')
 end rule
 
 rule replace_realloc_W_NULL defValMax [number]
@@ -346,7 +349,7 @@ rule replace_realloc_W_NULL defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'realloc '( AE1 [argument_expression],AE2 [argument_expression] ')
+		A[any]'realloc '( AE1 [argument_expression],AE2 [argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -363,14 +366,14 @@ rule replace_realloc_size_W_zero defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'realloc '( AE1 [argument_expression],AE2 [argument_expression] ')
+		A[any]'realloc '( AE1 [argument_expression],AE2 [argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'realloc '( AE1,0 ')
+		A'realloc '( AE1,0 ')
 end rule
 
 rule increment_realloc_size defValMax [number]
@@ -380,7 +383,7 @@ rule increment_realloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
+		A[any]'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -388,7 +391,7 @@ rule increment_realloc_size defValMax [number]
 	export skip 1
 	construct E1 [expression] AE2
 	by
-		'realloc '( AE1,'(E1')+1 ')
+		A'realloc '( AE1,'(E1')+1 ')
 end rule
 
 rule decrement_realloc_size defValMax [number]
@@ -398,7 +401,7 @@ rule decrement_realloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
+		A[any]'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -406,7 +409,7 @@ rule decrement_realloc_size defValMax [number]
 	export skip 1
 	construct E1 [expression] AE2
 	by
-		'realloc '( AE1,'(E1')-1 ')
+		A'realloc '( AE1,'(E1')-1 ')
 end rule
 
 rule replace_realloc_size_W_NO defValMax [number]
@@ -416,14 +419,14 @@ rule replace_realloc_size_W_NO defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
+		A[any]'realloc '( AE1 [argument_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'realloc '( AE1,-1')
+		A'realloc '( AE1,-1')
 end rule
 
 
@@ -434,7 +437,7 @@ rule replace_alloca_W_NULL defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'alloca '( AL[list argument_expression] ')
+		A[any]'alloca '( AL[list argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -451,14 +454,14 @@ rule replace_alloca_size_W_zero defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'alloca '( AL[assignment_expression] ')
+		A[any]'alloca '( AL[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'alloca '( 0 ')
+		A'alloca '( 0 ')
 end rule
 
 rule increment_alloca_size defValMax [number]
@@ -468,7 +471,7 @@ rule increment_alloca_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'alloca '( AE[assignment_expression] ')
+		A[any]'alloca '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -476,7 +479,7 @@ rule increment_alloca_size defValMax [number]
 	export skip 1
 	construct E [expression] AE
 	by
-		'alloca '( '(E')+1 ')
+		A'alloca '( '(E')+1 ')
 end rule
 
 rule decrement_alloca_size defValMax [number]
@@ -486,7 +489,7 @@ rule decrement_alloca_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'alloca '( AE[assignment_expression] ')
+		A[any]'alloca '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -494,7 +497,7 @@ rule decrement_alloca_size defValMax [number]
 	export skip 1
 	construct E [expression] AE
 	by
-		'alloca '( '(E')-1 ')
+		A'alloca '( '(E')-1 ')
 end rule
 
 rule replace_alloca_size_W_NO defValMax [number]
@@ -504,14 +507,14 @@ rule replace_alloca_size_W_NO defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'alloca '( AE[assignment_expression] ')
+		A[any]'alloca '( AE[assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'alloca '( -1 ')
+		A'alloca '( -1 ')
 end rule
 
 rule replace_calloc_W_NULL defValMax [number]
@@ -521,7 +524,7 @@ rule replace_calloc_W_NULL defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [argument_expression],AE2 [argument_expression] ')
+		A[any]'calloc '( AE1 [argument_expression],AE2 [argument_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -538,7 +541,7 @@ rule replace_calloc_W_malloc defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -547,7 +550,7 @@ rule replace_calloc_W_malloc defValMax [number]
 	construct E1 [expression] AE1
 	construct E2 [expression] AE2
 	by
-		'malloc '('(E1') * '(E2') ')
+		A'malloc '('(E1') * '(E2') ')
 end rule 
 
 rule replace_calloc_W_alloca defValMax [number] 
@@ -557,7 +560,7 @@ rule replace_calloc_W_alloca defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -566,7 +569,7 @@ rule replace_calloc_W_alloca defValMax [number]
 	construct E1 [expression] AE1
 	construct E2 [expression] AE2
 	by
-		'alloca '('(E1') * '(E2') ')
+		A'alloca '('(E1') * '(E2') ')
 end rule 
 
 rule replace_calloc_size_W_zero defValMax [number] 
@@ -576,14 +579,14 @@ rule replace_calloc_size_W_zero defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'calloc '( 0,AE2')
+		A'calloc '( 0,AE2')
 end rule 
 
 
@@ -594,7 +597,7 @@ rule increment_calloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -602,7 +605,7 @@ rule increment_calloc_size defValMax [number]
 	export skip 1
 	construct E1 [expression] AE1
 	by
-		'calloc '( '(E1')+1 ,AE2 ')
+		A'calloc '( '(E1')+1 ,AE2 ')
 end rule 
 
 rule decrement_calloc_size defValMax [number]
@@ -612,7 +615,7 @@ rule decrement_calloc_size defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -620,7 +623,7 @@ rule decrement_calloc_size defValMax [number]
 	export skip 1
 	construct E1 [expression] AE1
 	by
-		'calloc '( '(E1')-1 ,AE2 ')
+		A'calloc '( '(E1')-1 ,AE2 ')
 end rule 
 
 
@@ -631,14 +634,14 @@ rule replace_calloc_size_W_NO defValMax [number]
 	import callVal [number]
 	
 	replace $ [assignment_expression]
-		'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
+		A[any]'calloc '( AE1 [assignment_expression],AE2 [assignment_expression] ')
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
 	where localPassCounter[>globalPassCounter]
 	export skip 1
 	by
-		'calloc '( -1 ,AE2 ')
+		A'calloc '( -1 ,AE2 ')
 end rule 
 
 rule removeNullDec defValMax [number]
@@ -827,4 +830,3 @@ rule prepareNextMutationOP defValMax [number]
 	by
 		P
 end rule
-
