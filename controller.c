@@ -405,8 +405,8 @@ ValgrindResult * genValgrindResult(char *cwd, char*original_file_Name_dir,char*s
     args_valgrind[4]="--xml=yes";
     args_valgrind[5]= malloc(snprintf(NULL, 0, "--xml-file=%s",xml_file_location) + 1);
     sprintf(args_valgrind[5], "--xml-file=%s",xml_file_location);
-    args_valgrind[6]=malloc(snprintf(NULL, 0, "%s/%s",makeDir, user_config->executablePath) + 1);
-    sprintf(args_valgrind[6], "%s/%s",makeDir, user_config->executablePath);
+    args_valgrind[6]=malloc(snprintf(NULL, 0, "%s", user_config->executablePath) + 1);
+    sprintf(args_valgrind[6], "%s", user_config->executablePath);
     args_valgrind[7]=NULL;
     
     //Make sure we do not get duplicate output when lanching valgrind

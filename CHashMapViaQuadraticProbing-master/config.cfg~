@@ -1,6 +1,0 @@
-sourceRootDir="/home/jay/Desktop/Mutate/small-put/CHashMapViaQuadraticProbing-master";
-source = ("pseudolru.c");
-outputDir="";
-testingFramework="cutest";
-CuTestLibSource="CuTest.c";
-executablePath="tests";
