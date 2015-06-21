@@ -1,0 +1,5 @@
+sourceRootDir="/home/jay/Desktop/splay-tree-master";
+executablePath="splay-tree-master/tests";
+source = ("splaytree.c");
+testingFramework="cutest";
+CuTestLibSource="CuTest.c";

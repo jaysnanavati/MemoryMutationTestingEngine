@@ -1,0 +1,5 @@
+sourceRootDir="/home/jay/Desktop/heap-master";
+executablePath="heap-master/test";
+source = ("heap.c");
+testingFramework="cutest";
+CuTestLibSource="tests/CuTest.c";

@@ -1,0 +1,62 @@
+        -:    0:Source:main.c
+        -:    0:Programs:2
+        -:    1:
+        -:    2:
+        -:    3:/* This is auto-generated code. Edit at your own peril. */
+        -:    4:#include <stdio.h>
+        -:    5:#include "CuTest.h"
+        -:    6:
+        -:    7:
+        -:    8:extern void TestPseudoLRU_init_is_empty(CuTest*);
+        -:    9:extern void TestPseudoLRU_init_means_peek_is_empty(CuTest*);
+        -:   10:extern void TestPseudoLRU_post_put_means_peek_exists(CuTest*);
+        -:   11:extern void TestPseudoLRU_post_put_means_not_empty(CuTest*);
+        -:   12:extern void TestPseudoLRU_put_x_plus_others_then_get_x(CuTest*);
+        -:   13:extern void TestPseudoLRU_put_4_get_2(CuTest*);
+        -:   14:extern void TestPseudoLRU_get_puts_at_root(CuTest*);
+        -:   15:extern void TestPseudoLRU_put_does_not_dupe(CuTest*);
+        -:   16:extern void TestPseudoLRU_put_dupe_doesnt_overwrite(CuTest*);
+        -:   17:extern void TestPseudoLRU_get_nonexistant_fails(CuTest*);
+        -:   18:extern void TestPseudoLRU_get_when_empty_fails(CuTest*);
+        -:   19:extern void TestPseudoLRU_remove_when_empty_fails(CuTest*);
+        -:   20:extern void TestPseudoLRU_remove_successully_if_exists(CuTest*);
+        -:   21:extern void TestPseudoLRU_remove_returns_value(CuTest*);
+        -:   22:extern void TestPseudoLRU_pop_lru_gets_unused_item(CuTest*);
+        -:   23:extern void TestPseudoLRU_pop_lru_gets_unused_item2(CuTest*);
+        -:   24:
+        -:   25:
+        1:   26:void RunAllTests(void) 
+        -:   27:{
+        1:   28:    CuString *output = CuStringNew();
+        1:   29:    CuSuite* suite = CuSuiteNew();
+        -:   30:
+        -:   31:
+        1:   32:    SUITE_ADD_TEST(suite, TestPseudoLRU_init_is_empty);
+        1:   33:    SUITE_ADD_TEST(suite, TestPseudoLRU_init_means_peek_is_empty);
+        1:   34:    SUITE_ADD_TEST(suite, TestPseudoLRU_post_put_means_peek_exists);
+        1:   35:    SUITE_ADD_TEST(suite, TestPseudoLRU_post_put_means_not_empty);
+        1:   36:    SUITE_ADD_TEST(suite, TestPseudoLRU_put_x_plus_others_then_get_x);
+        1:   37:    SUITE_ADD_TEST(suite, TestPseudoLRU_put_4_get_2);
+        1:   38:    SUITE_ADD_TEST(suite, TestPseudoLRU_get_puts_at_root);
+        1:   39:    SUITE_ADD_TEST(suite, TestPseudoLRU_put_does_not_dupe);
+        1:   40:    SUITE_ADD_TEST(suite, TestPseudoLRU_put_dupe_doesnt_overwrite);
+        1:   41:    SUITE_ADD_TEST(suite, TestPseudoLRU_get_nonexistant_fails);
+        1:   42:    SUITE_ADD_TEST(suite, TestPseudoLRU_get_when_empty_fails);
+        1:   43:    SUITE_ADD_TEST(suite, TestPseudoLRU_remove_when_empty_fails);
+        1:   44:    SUITE_ADD_TEST(suite, TestPseudoLRU_remove_successully_if_exists);
+        1:   45:    SUITE_ADD_TEST(suite, TestPseudoLRU_remove_returns_value);
+        1:   46:    SUITE_ADD_TEST(suite, TestPseudoLRU_pop_lru_gets_unused_item);
+        1:   47:    SUITE_ADD_TEST(suite, TestPseudoLRU_pop_lru_gets_unused_item2);
+        -:   48:
+        1:   49:    CuSuiteRun(suite);
+        1:   50:    CuSuiteSummary(suite, output);
+        1:   51:    CuSuiteDetails(suite, output);
+        1:   52:    printf("%s\n", output->buffer);
+        1:   53:}
+        -:   54:
+        1:   55:int main()
+        -:   56:{
+        1:   57:    RunAllTests();
+        1:   58:    return 0;
+        -:   59:}
+        -:   60:

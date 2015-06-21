@@ -1,0 +1,5 @@
+sourceRootDir="/home/jay/Desktop/array-avl-tree-master";
+executablePath="array-avl-tree-master/test";
+source = ("avl_tree.c");
+testingFramework="cutest";
+CuTestLibSource="tests/CuTest.c";
