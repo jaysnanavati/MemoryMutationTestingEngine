@@ -1,5 +1,0 @@
-sourceRootDir="/home/jay/Desktop/CMeanQueue";
-executablePath="CMeanQueue/tests";
-source = ("meanqueue.c");
-testingFramework="cutest";
-CuTestLibSource="CuTest.c";

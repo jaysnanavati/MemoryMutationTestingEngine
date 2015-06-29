@@ -1,5 +1,0 @@
-sourceRootDir="/home/jay/Desktop/streaming-bencode-master";
-executablePath="streaming-bencode-master/tests";
-source = ("bencode.c");
-testingFramework="cutest";
-CuTestLibSource="tests/CuTest.c";
