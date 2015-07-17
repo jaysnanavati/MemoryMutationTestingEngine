@@ -6,6 +6,36 @@ redefine ptr_operator
     * [repeat cv_qualifier] [SPON]
 end define
 
+redefine equality_expression
+    [relational_expression]
+end define
+
+redefine logical_OR_expression
+    [logical_AND_expression]
+end define
+
+redefine logical_AND_operator
+    '&& | '||
+#ifdef GNU
+|   'AND | 'and | 'ANDP | 'OR | 'or
+#endif
+end define
+
+redefine relational_operator
+    '== | '!= | '< | '> | '<= | '>=
+end define
+
+redefine additive_expression
+    [multiplicative_expression]
+end define
+
+redefine multiplicative_operator
+    '+ | '- | '* | '/ | '%
+#ifdef GNU
+|   'DIV | 'MOD
+#endif
+end define
+
 % --> END REDEFINES <--
 
 function main
@@ -16,7 +46,7 @@ function main
 	export skip [number] 0
 	export globalPassCounter [number] 0
 	export localPassCounter [number] 0
-	export callVal [number] 0
+	export callVal [number] 30
 	deconstruct * TXLargs
 		"-mut_out" Value [stringlit] MoreOptions [repeat stringlit]
 	export mut_folder [stringlit] Value
@@ -37,6 +67,11 @@ function driver
 		  [mutateDynamicAllocation 27]
 		  [mutateSizeof 29]
 		  [mutateVLA 30]
+		  [mutateAOR 35]
+		  [mutateLCR 37]
+		  [mutateROR 43]
+		  [mutateUOI 47]
+		  [mutateABS 51]
 	
 end function
 
@@ -235,6 +270,134 @@ rule mutateVLA defValMax [number]
 		  [replace_sizeof_VLA_W_NO 30]
 		  [generateMutant "REVLANA_" 30]
 		  [prepareNextMutationOP 30]
+		  
+end rule
+
+rule mutateAOR defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_arithmatic_with_minus 31]
+		  [generateMutant "AOR_0" 31]
+		  [prepareNextMutationOP 31]
+		  
+		  [replace_arithmatic_with_plus 32]
+		  [generateMutant "AOR_1" 32]
+		  [prepareNextMutationOP 32]
+		  
+		  [replace_arithmatic_with_multiply 33]
+		  [generateMutant "AOR_2" 33]
+		  [prepareNextMutationOP 33]
+		  
+		  [replace_arithmatic_with_divide 34]
+		  [generateMutant "AOR_3" 34]
+		  [prepareNextMutationOP 34]
+		  
+		  [replace_arithmatic_with_mod 35]
+		  [generateMutant "AOR_4" 35]
+		  [prepareNextMutationOP 35]
+end rule
+
+rule mutateLCR defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_logical_or_with_and 36]
+		  [generateMutant "LCR_0" 36]
+		  [prepareNextMutationOP 36]
+		  
+		  [replace_logical_and_with_or 37]
+		  [generateMutant "LCR_1" 37]
+		  [prepareNextMutationOP 37]
+		  
+end rule
+
+rule mutateROR defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_relational_with_equal 38]
+		  [generateMutant "ROR_0" 38]
+		  [prepareNextMutationOP 38]
+		  
+		  [replace_relational_with_inequal 39]
+		  [generateMutant "ROR_1" 39]
+		  [prepareNextMutationOP 39]
+		  
+		  [replace_relational_with_lt 40]
+		  [generateMutant "ROR_2" 40]
+		  [prepareNextMutationOP 40]
+		  
+		  [replace_relational_with_le 41]
+		  [generateMutant "ROR_3" 41]
+		  [prepareNextMutationOP 41]
+		  
+		  [replace_relational_with_gt 42]
+		  [generateMutant "ROR_4" 42]
+		  [prepareNextMutationOP 42]
+		  
+		  [replace_relational_with_ge 43]
+		  [generateMutant "ROR_5" 43]
+		  [prepareNextMutationOP 43]
+		  
+end rule
+
+rule mutateUOI defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_reference_with_pre_inc 44]
+		  [generateMutant "UOI_0" 44]
+		  [prepareNextMutationOP 44]
+		  
+		  [replace_reference_with_pre_dec 45]
+		  [generateMutant "UOI_1" 45]
+		  [prepareNextMutationOP 45]
+		  
+		  [replace_reference_with_post_inc 46]
+		  [generateMutant "UOI_2" 46]
+		  [prepareNextMutationOP 46]
+		  
+		  [replace_reference_with_post_dec 47]
+		  [generateMutant "UOI_3" 47]
+		  [prepareNextMutationOP 47]
+		  
+end rule
+
+rule mutateABS defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_additive_expresion_with_abs 48]
+		  [generateMutant "ABS_0" 48]
+		  [prepareNextMutationOP 48]
+		  
+		  [replace_additive_expresion_with_nabs 49]
+		  [generateMutant "ABS_1" 49]
+		  [prepareNextMutationOP 49]
+		  
+		  [replace_multiplicative_expresion_with_abs 50]
+		  [generateMutant "ABS_2" 50]
+		  [prepareNextMutationOP 50]
+		  
+		  [replace_multiplicative_expresion_with_nabs 51]
+		  [generateMutant "ABS_3" 51]
+		  [prepareNextMutationOP 51]
 		  
 end rule
 
@@ -782,6 +945,426 @@ rule replace_sizeof_VLA_W_NO defValMax [number]
 	by
 		'[ 'feof '( 'NULL ')==0?-1:-1 ']
 end rule
+
+% selective AOR
+
+rule replace_arithmatic_with_minus defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_operator]
+		O1 [multiplicative_operator]
+	construct O2 [multiplicative_operator]
+		-
+	where 
+		O1 [~= O2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		-
+end rule
+
+rule replace_arithmatic_with_plus defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_operator]
+		O1 [multiplicative_operator]
+	construct O2 [multiplicative_operator]
+		+
+	where 
+		O1 [~= O2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		+
+end rule
+
+rule replace_arithmatic_with_multiply defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_operator]
+		O1 [multiplicative_operator]
+	construct O2 [multiplicative_operator]
+		*
+	where 
+		O1 [~= O2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		*
+end rule
+
+rule replace_arithmatic_with_divide defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_operator]
+		O1 [multiplicative_operator]
+	construct O2 [multiplicative_operator]
+		/
+	where 
+		O1 [~= O2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		/
+end rule
+
+rule replace_arithmatic_with_mod defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_operator]
+		O1 [multiplicative_operator]
+	construct O2 [multiplicative_operator]
+		'%
+	where 
+		O1 [~= O2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		'%
+end rule
+
+% selective ABS
+
+rule replace_additive_expresion_with_abs defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[additive_expression]
+		A [additive_expression]
+	deconstruct not A
+		M [multiplicative_expression]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		abs( A )
+end rule
+
+rule replace_additive_expresion_with_nabs defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[additive_expression]
+		A [additive_expression]
+	deconstruct not A
+		M [multiplicative_expression]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		( - abs( A ) )
+end rule
+
+rule replace_multiplicative_expresion_with_abs defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_expression]
+		A [multiplicative_expression]
+	deconstruct not A
+		M [postfix_expression]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		abs( A )
+end rule
+
+rule replace_multiplicative_expresion_with_nabs defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[multiplicative_expression]
+		A [multiplicative_expression]
+	deconstruct not A
+		M [postfix_expression]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		( - abs( A ) )
+end rule
+
+% selective LCR
+
+rule replace_logical_or_with_and defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[logical_AND_operator]
+		'||
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		'&&
+end rule
+
+rule replace_logical_and_with_or defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[logical_AND_operator]
+		'&&
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		'||
+end rule
+
+% selective UOI
+
+rule replace_reference_with_pre_inc defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[unary_expression]
+		ID [id]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		++ ID
+end rule
+
+rule replace_reference_with_pre_dec defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[unary_expression]
+		ID [id]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		-- ID
+end rule
+
+rule replace_reference_with_post_inc defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[unary_expression]
+		ID [id]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		ID ++
+end rule
+
+rule replace_reference_with_post_dec defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[unary_expression]
+		ID [id]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		ID --
+end rule
+
+% selective ROR
+
+rule replace_relational_with_equal defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		==
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		==
+end rule
+
+rule replace_relational_with_inequal defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		!=
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		!=
+end rule
+
+rule replace_relational_with_lt defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		<
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		<
+end rule
+
+rule replace_relational_with_le defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		<=
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		<=
+end rule
+
+rule replace_relational_with_gt defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		>
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		>
+end rule
+
+rule replace_relational_with_ge defValMax [number]
+	import globalPassCounter [number]
+	import localPassCounter [number]
+	import skip [number]
+	import callVal [number]
+	
+	replace $[relational_operator]
+		OP [relational_operator]
+	construct OP2 [relational_operator]
+		>=
+	where 
+		OP [~= OP2]
+	where callVal[<=defValMax]
+	export localPassCounter localPassCounter[+1] 
+	where skip[=0]
+	where localPassCounter[>globalPassCounter]
+	export skip 1
+	by
+		>=
+end rule
+
 
 % --> SAVE AND REVERT PUT to original after every mutation <--
 
