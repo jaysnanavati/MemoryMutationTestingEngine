@@ -1,0 +1,16 @@
+../PUTs/01pwp
+../PUTs/02CRaft-master
+../PUTs/03farraylist-master
+../PUTs/04CHashMapViaLinkedList
+../PUTs/05array-avl-tree-master
+../PUTs/06pseudolru-master
+../PUTs/07quadratic-probing-hashmap
+../PUTs/08texture-atlas
+../PUTs/09splay-tree-master
+../PUTs/10streaming-bencode-master
+../PUTs/11CSparseCounter
+../PUTs/12heap-master
+../PUTs/13cbuffer-master
+../PUTs/14CLinkedListQueue
+../PUTs/15bipbuffer-master
+../PUTs/16CBitfield

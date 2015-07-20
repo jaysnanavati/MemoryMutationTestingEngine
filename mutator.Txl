@@ -59,19 +59,19 @@ function driver
 		P [program]
 	by
 		P [mutateNULLAssignments 1]
-		  [mutateFree 4]
-		  [mutateCalloc 8]
-		  [mutateAlloca 10]
-		  [mutateRealloc 12]
-		  [mutateMalloc 15]
-		  [mutateDynamicAllocation 27]
-		  [mutateSizeof 29]
-		  [mutateVLA 30]
-		  [mutateAOR 35]
-		  [mutateLCR 37]
-		  [mutateROR 43]
-		  [mutateUOI 47]
-		  [mutateABS 51]
+		  [mutateFree 2]
+		  [mutateCalloc 6]
+		  [mutateAlloca 8]
+		  [mutateRealloc 10]
+		  [mutateMalloc 13]
+		  %[mutateDynamicAllocation 27]
+		  [mutateSizeof 15]
+		  %[mutateVLA 30]
+		  [mutateAOR 20]
+		  [mutateLCR 22]
+		  [mutateROR 28]
+		  [mutateUOI 32]
+		  [mutateABS 36]
 	
 end function
 
@@ -84,7 +84,7 @@ rule mutateNULLAssignments defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [removeNullDec 0]
-		  [generateMutant "RMNA_" 0]
+		  [generateMutant "RMNA_0" 0]
 		  [prepareNextMutationOP 0]
 		  
 		  [removeNullStmt 1]
@@ -99,16 +99,16 @@ rule mutateFree defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P [removeFree 2]
-		  [generateMutant "RMFS_" 2]
+		  [generateMutant "RMFS_0" 2]
 		  [prepareNextMutationOP 2]
 		  
-		  [free_Increment_pointerAddr 3]
-		  [generateMutant "FPIBO_" 3]
-		  [prepareNextMutationOP 3]
+		  %[free_Increment_pointerAddr 3]
+		  %[generateMutant "FPIBO_" 3]
+		  %[prepareNextMutationOP 3]
 		  
-		  [free_Decrement_pointerAddr 4]
-		  [generateMutant "FPDBO_" 4]
-		  [prepareNextMutationOP 4]
+		  %[free_Decrement_pointerAddr 4]
+		  %[generateMutant "FPDBO_" 4]
+		  %[prepareNextMutationOP 4]
 		 
 end rule
 
@@ -118,21 +118,21 @@ rule mutateCalloc defValMax [number]
 		P [program]
 	where callVal[<=defValMax]
 	by
-		P [replace_calloc_W_malloc 5]
-		  [generateMutant "REC2M_" 5]
+		P [replace_calloc_W_malloc 3]
+		  [generateMutant "REC2M_0" 3]
+		  [prepareNextMutationOP 3]
+		  
+		  [replace_calloc_W_alloca 4]
+		  [generateMutant "REC2A_0" 4]
+		  [prepareNextMutationOP 4]
+		  
+		  [replace_calloc_W_NULL 5]
+		  [generateMutant "REDAWN_0" 5]
 		  [prepareNextMutationOP 5]
 		  
-		  [replace_calloc_W_alloca 6]
-		  [generateMutant "REC2A_" 6]
+		  [replace_calloc_size_W_zero 6]
+		  [generateMutant "REDAWZ_0" 6]
 		  [prepareNextMutationOP 6]
-		  
-		  [replace_calloc_W_NULL 7]
-		  [generateMutant "REDAWN_" 7]
-		  [prepareNextMutationOP 7]
-		  
-		  [replace_calloc_size_W_zero 8]
-		  [generateMutant "REDAWZ_" 8]
-		  [prepareNextMutationOP 8]
 		  
 end rule
 
@@ -143,13 +143,13 @@ rule mutateAlloca defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_alloca_W_NULL 9]
-		  [generateMutant "REDAWN_1" 9]
-		  [prepareNextMutationOP 9]
+		  [replace_alloca_W_NULL 7]
+		  [generateMutant "REDAWN_1" 7]
+		  [prepareNextMutationOP 7]
 		  
-		  [replace_alloca_size_W_zero 10]
-		  [generateMutant "REDAWZ_1" 10]
-		  [prepareNextMutationOP 10]
+		  [replace_alloca_size_W_zero 8]
+		  [generateMutant "REDAWZ_1" 8]
+		  [prepareNextMutationOP 8]
 end rule
 
 rule mutateRealloc defValMax [number]
@@ -159,13 +159,13 @@ rule mutateRealloc defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_realloc_W_NULL 11]
-		  [generateMutant "REDAWN_2" 11]
-		  [prepareNextMutationOP 11]
+		  [replace_realloc_W_NULL 9]
+		  [generateMutant "REDAWN_2" 9]
+		  [prepareNextMutationOP 9]
 		  
-		  [replace_realloc_size_W_zero 12]
-		  [generateMutant "REDAWZ_2" 12]
-		  [prepareNextMutationOP 12]
+		  [replace_realloc_size_W_zero 10]
+		  [generateMutant "REDAWZ_2" 10]
+		  [prepareNextMutationOP 10]
 end rule
 
 rule mutateMalloc defValMax [number]
@@ -175,17 +175,17 @@ rule mutateMalloc defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_malloc_W_alloca 13]
-		  [generateMutant "REM2A_" 13]
+		  [replace_malloc_W_alloca 11]
+		  [generateMutant "REM2A_0" 11]
+		  [prepareNextMutationOP 11]
+		  
+		  [replace_malloc_size_W_zero 12]
+		  [generateMutant "REDAWZ_3" 12]
+		  [prepareNextMutationOP 12]
+		  
+		  [replace_malloc_W_N 13]
+		  [generateMutant "REDAWN_3" 13]
 		  [prepareNextMutationOP 13]
-		  
-		  [replace_malloc_size_W_zero 14]
-		  [generateMutant "REDAWZ_3" 14]
-		  [prepareNextMutationOP 14]
-		  
-		  [replace_malloc_W_N 15]
-		  [generateMutant "REDAWN_3" 15]
-		  [prepareNextMutationOP 15]
 end rule
 
 rule mutateDynamicAllocation defValMax [number]
@@ -195,53 +195,53 @@ rule mutateDynamicAllocation defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [increment_calloc_size 16]
-		  [generateMutant "REBSPO_" 16]
-		  [prepareNextMutationOP 16]
+		  %[increment_calloc_size 16]
+		  %[generateMutant "REBSPO_0" 16]
+		  %[prepareNextMutationOP 16]
 		  
-		  [increment_alloca_size 17]
-		  [generateMutant "REBSPO_1" 17]
-		  [prepareNextMutationOP 17]
+		  %[increment_alloca_size 17]
+		  %[generateMutant "REBSPO_1" 17]
+		  %[prepareNextMutationOP 17]
 		  
-		  [increment_realloc_size 18]
-		  [generateMutant "REBSPO_2" 18]
-		  [prepareNextMutationOP 18]
+		  %[increment_realloc_size 18]
+		  %[generateMutant "REBSPO_2" 18]
+		  %[prepareNextMutationOP 18]
 		  
-		  [increment_malloc_size 19]
-		  [generateMutant "REBSPO_3" 19]
-		  [prepareNextMutationOP 19]
+		  %[increment_malloc_size 19]
+		  %[generateMutant "REBSPO_3" 19]
+		  %[prepareNextMutationOP 19]
 		  
-		  [decrement_calloc_size 20]
-		  [generateMutant "REBSLO_" 20]
-		  [prepareNextMutationOP 20]
+		  %[decrement_calloc_size 20]
+		  %[generateMutant "REBSLO_0" 20]
+		  %[prepareNextMutationOP 20]
 		  
-		  [decrement_alloca_size 21]
-		  [generateMutant "REBSLO_1" 21]
-		  [prepareNextMutationOP 21]
+		  %[decrement_alloca_size 21]
+		  %[generateMutant "REBSLO_1" 21]
+		  %[prepareNextMutationOP 21]
 		  
-		  [decrement_realloc_size 22]
-		  [generateMutant "REBSLO_2" 22]
-		  [prepareNextMutationOP 22]
+		  %[decrement_realloc_size 22]
+		  %[generateMutant "REBSLO_2" 22]
+		  %[prepareNextMutationOP 22]
 		  
-		  [decrement_malloc_size 23]
-		  [generateMutant "REBSLO_3" 23]
-		  [prepareNextMutationOP 23]
+		  %[decrement_malloc_size 23]
+		  %[generateMutant "REBSLO_3" 23]
+		  %[prepareNextMutationOP 23]
 		  
-		  [replace_calloc_size_W_NO 24]
-		  [generateMutant "REBSNO_" 24]
-		  [prepareNextMutationOP 24]
+		  %[replace_calloc_size_W_NO 24]
+		  %[generateMutant "REBSNO_0" 24]
+		  %[prepareNextMutationOP 24]
 		  
-		  [replace_alloca_size_W_NO 25]
-		  [generateMutant "REBSNO_1" 25]
-		  [prepareNextMutationOP 25]
+		  %[replace_alloca_size_W_NO 25]
+		  %[generateMutant "REBSNO_1" 25]
+		  %[prepareNextMutationOP 25]
 		  
-		  [replace_realloc_size_W_NO 26]
-		  [generateMutant "REBSNO_2" 26]
-		  [prepareNextMutationOP 26]
+		  %[replace_realloc_size_W_NO 26]
+		  %[generateMutant "REBSNO_2" 26]
+		  %[prepareNextMutationOP 26]
 		  
-		  [replace_malloc_size_W_NO 27]
-		  [generateMutant "REBSNO_3" 27]
-		  [prepareNextMutationOP 27]
+		  %[replace_malloc_size_W_NO 27]
+		  %[generateMutant "REBSNO_3" 27]
+		  %[prepareNextMutationOP 27]
 end rule
 
 rule mutateSizeof defValMax [number]
@@ -251,13 +251,13 @@ rule mutateSizeof defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_sizeof_W_pointer 28]
-		  [generateMutant "RESOTPE_" 28]
-		  [prepareNextMutationOP 28]
+		  [replace_sizeof_W_pointer 14]
+		  [generateMutant "RESOTPE_0" 14]
+		  [prepareNextMutationOP 14]
 		  
-		  [replace_sizeof_W_non_pointer 29]
-		  [generateMutant "REMSOTP_" 29]
-		  [prepareNextMutationOP 29]
+		  [replace_sizeof_W_non_pointer 15]
+		  [generateMutant "REMSOTP_0" 15]
+		  [prepareNextMutationOP 15]
 end rule
 
 rule mutateVLA defValMax [number]
@@ -267,9 +267,9 @@ rule mutateVLA defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_sizeof_VLA_W_NO 30]
-		  [generateMutant "REVLANA_" 30]
-		  [prepareNextMutationOP 30]
+		  %[replace_sizeof_VLA_W_NO 30]
+		  %[generateMutant "REVLANA_0" 30]
+		  %[prepareNextMutationOP 30]
 		  
 end rule
 
@@ -280,25 +280,25 @@ rule mutateAOR defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_arithmatic_with_minus 31]
-		  [generateMutant "AOR_0" 31]
-		  [prepareNextMutationOP 31]
+		  [replace_arithmatic_with_minus 16]
+		  [generateMutant "AOR_0" 16]
+		  [prepareNextMutationOP 16]
 		  
-		  [replace_arithmatic_with_plus 32]
-		  [generateMutant "AOR_1" 32]
-		  [prepareNextMutationOP 32]
+		  [replace_arithmatic_with_plus 17]
+		  [generateMutant "AOR_1" 17]
+		  [prepareNextMutationOP 17]
 		  
-		  [replace_arithmatic_with_multiply 33]
-		  [generateMutant "AOR_2" 33]
-		  [prepareNextMutationOP 33]
+		  [replace_arithmatic_with_multiply 18]
+		  [generateMutant "AOR_2" 18]
+		  [prepareNextMutationOP 18]
 		  
-		  [replace_arithmatic_with_divide 34]
-		  [generateMutant "AOR_3" 34]
-		  [prepareNextMutationOP 34]
+		  [replace_arithmatic_with_divide 19]
+		  [generateMutant "AOR_3" 19]
+		  [prepareNextMutationOP 19]
 		  
-		  [replace_arithmatic_with_mod 35]
-		  [generateMutant "AOR_4" 35]
-		  [prepareNextMutationOP 35]
+		  [replace_arithmatic_with_mod 20]
+		  [generateMutant "AOR_4" 20]
+		  [prepareNextMutationOP 20]
 end rule
 
 rule mutateLCR defValMax [number]
@@ -308,13 +308,13 @@ rule mutateLCR defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_logical_or_with_and 36]
-		  [generateMutant "LCR_0" 36]
-		  [prepareNextMutationOP 36]
+		  [replace_logical_or_with_and 21]
+		  [generateMutant "LCR_0" 21]
+		  [prepareNextMutationOP 21]
 		  
-		  [replace_logical_and_with_or 37]
-		  [generateMutant "LCR_1" 37]
-		  [prepareNextMutationOP 37]
+		  [replace_logical_and_with_or 22]
+		  [generateMutant "LCR_1" 22]
+		  [prepareNextMutationOP 22]
 		  
 end rule
 
@@ -325,29 +325,29 @@ rule mutateROR defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_relational_with_equal 38]
-		  [generateMutant "ROR_0" 38]
-		  [prepareNextMutationOP 38]
+		  [replace_relational_with_equal 23]
+		  [generateMutant "ROR_0" 23]
+		  [prepareNextMutationOP 23]
 		  
-		  [replace_relational_with_inequal 39]
-		  [generateMutant "ROR_1" 39]
-		  [prepareNextMutationOP 39]
+		  [replace_relational_with_inequal 24]
+		  [generateMutant "ROR_1" 24]
+		  [prepareNextMutationOP 24]
 		  
-		  [replace_relational_with_lt 40]
-		  [generateMutant "ROR_2" 40]
-		  [prepareNextMutationOP 40]
+		  [replace_relational_with_lt 25]
+		  [generateMutant "ROR_2" 25]
+		  [prepareNextMutationOP 25]
 		  
-		  [replace_relational_with_le 41]
-		  [generateMutant "ROR_3" 41]
-		  [prepareNextMutationOP 41]
+		  [replace_relational_with_le 26]
+		  [generateMutant "ROR_3" 26]
+		  [prepareNextMutationOP 26]
 		  
-		  [replace_relational_with_gt 42]
-		  [generateMutant "ROR_4" 42]
-		  [prepareNextMutationOP 42]
+		  [replace_relational_with_gt 27]
+		  [generateMutant "ROR_4" 27]
+		  [prepareNextMutationOP 27]
 		  
-		  [replace_relational_with_ge 43]
-		  [generateMutant "ROR_5" 43]
-		  [prepareNextMutationOP 43]
+		  [replace_relational_with_ge 28]
+		  [generateMutant "ROR_5" 28]
+		  [prepareNextMutationOP 28]
 		  
 end rule
 
@@ -358,21 +358,21 @@ rule mutateUOI defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_reference_with_pre_inc 44]
-		  [generateMutant "UOI_0" 44]
-		  [prepareNextMutationOP 44]
+		  [replace_reference_with_pre_inc 29]
+		  [generateMutant "UOI_0" 29]
+		  [prepareNextMutationOP 29]
 		  
-		  [replace_reference_with_pre_dec 45]
-		  [generateMutant "UOI_1" 45]
-		  [prepareNextMutationOP 45]
+		  [replace_reference_with_pre_dec 30]
+		  [generateMutant "UOI_1" 30]
+		  [prepareNextMutationOP 30]
 		  
-		  [replace_reference_with_post_inc 46]
-		  [generateMutant "UOI_2" 46]
-		  [prepareNextMutationOP 46]
+		  [replace_reference_with_post_inc 31]
+		  [generateMutant "UOI_2" 31]
+		  [prepareNextMutationOP 31]
 		  
-		  [replace_reference_with_post_dec 47]
-		  [generateMutant "UOI_3" 47]
-		  [prepareNextMutationOP 47]
+		  [replace_reference_with_post_dec 32]
+		  [generateMutant "UOI_3" 32]
+		  [prepareNextMutationOP 32]
 		  
 end rule
 
@@ -383,21 +383,21 @@ rule mutateABS defValMax [number]
 	where callVal[<=defValMax]
 	by
 		P 
-		  [replace_additive_expresion_with_abs 48]
-		  [generateMutant "ABS_0" 48]
-		  [prepareNextMutationOP 48]
+		  [replace_additive_expresion_with_abs 33]
+		  [generateMutant "ABS_0" 33]
+		  [prepareNextMutationOP 33]
 		  
-		  [replace_additive_expresion_with_nabs 49]
-		  [generateMutant "ABS_1" 49]
-		  [prepareNextMutationOP 49]
+		  [replace_additive_expresion_with_nabs 34]
+		  [generateMutant "ABS_1" 34]
+		  [prepareNextMutationOP 34]
 		  
-		  [replace_multiplicative_expresion_with_abs 50]
-		  [generateMutant "ABS_2" 50]
-		  [prepareNextMutationOP 50]
+		  [replace_multiplicative_expresion_with_abs 35]
+		  [generateMutant "ABS_2" 35]
+		  [prepareNextMutationOP 35]
 		  
-		  [replace_multiplicative_expresion_with_nabs 51]
-		  [generateMutant "ABS_3" 51]
-		  [prepareNextMutationOP 51]
+		  [replace_multiplicative_expresion_with_nabs 36]
+		  [generateMutant "ABS_3" 36]
+		  [prepareNextMutationOP 36]
 		  
 end rule
 
