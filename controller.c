@@ -279,10 +279,32 @@ int startMake(char**args,char*currentMutation){
     execvp (args[0],args);
   }else{
     int status;
-    if( waitpid(pid, &status, 0) < 0 ) {
+    struct timespec sleepTime;
+    struct timespec remainingTime;
+    const int SLEEP_UNIT_IN_MS=100;
+    const int WAIT_MAX_IN_MS=60*1000;
+    sleepTime.tv_sec=0;
+    sleepTime.tv_nsec=SLEEP_UNIT_IN_MS*1000*1000;
+    int waitStatus, i;
+    for(i=0; i<WAIT_MAX_IN_MS/SLEEP_UNIT_IN_MS; i++){
+    	waitStatus=waitpid(pid, &status, WNOHANG);
+    	if( waitStatus!=0 ) {
+    		break;
+    	}
+    	nanosleep(&sleepTime, &remainingTime);
+    }
+    if( waitStatus < 0 ) {
       perror("wait");
     }
+    else if(waitStatus==0){
+    	// timeout, kill the process
+    	kill(pid, SIGKILL);
+    	printf("Timeout, killed child process.\n");
+    	waitpid(pid, &status, 0);
+    	return 2;
+    }
     if(WIFEXITED(status)) {
+      printf("make returns %d.\n", WEXITSTATUS(status));
       return WEXITSTATUS(status);
     }
   }

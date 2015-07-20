@@ -46,7 +46,7 @@ function main
 	export skip [number] 0
 	export globalPassCounter [number] 0
 	export localPassCounter [number] 0
-	export callVal [number] 30
+	export callVal [number] 0
 	deconstruct * TXLargs
 		"-mut_out" Value [stringlit] MoreOptions [repeat stringlit]
 	export mut_folder [stringlit] Value
@@ -1061,10 +1061,10 @@ rule replace_additive_expresion_with_abs defValMax [number]
 	import skip [number]
 	import callVal [number]
 	
-	replace $[additive_expression]
-		A [additive_expression]
+	replace $[cast_expression]
+		A [cast_expression]
 	deconstruct not A
-		M [multiplicative_expression]
+		M [primary]
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -1080,10 +1080,10 @@ rule replace_additive_expresion_with_nabs defValMax [number]
 	import skip [number]
 	import callVal [number]
 	
-	replace $[additive_expression]
-		A [additive_expression]
+	replace $[cast_expression]
+		A [cast_expression]
 	deconstruct not A
-		M [multiplicative_expression]
+		M [primary]
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -1102,7 +1102,7 @@ rule replace_multiplicative_expresion_with_abs defValMax [number]
 	replace $[multiplicative_expression]
 		A [multiplicative_expression]
 	deconstruct not A
-		M [postfix_expression]
+		M [cast_expression]
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
@@ -1121,7 +1121,7 @@ rule replace_multiplicative_expresion_with_nabs defValMax [number]
 	replace $[multiplicative_expression]
 		A [multiplicative_expression]
 	deconstruct not A
-		M [postfix_expression]
+		M [cast_expression]
 	where callVal[<=defValMax]
 	export localPassCounter localPassCounter[+1] 
 	where skip[=0]
