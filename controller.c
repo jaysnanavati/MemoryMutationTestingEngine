@@ -304,7 +304,7 @@ int startMake(char**args,char*currentMutation){
     	return 2;
     }
     if(WIFEXITED(status)) {
-      printf("make returns %d.\n", WEXITSTATUS(status));
+      //printf("make returns %d.\n", WEXITSTATUS(status));
       return WEXITSTATUS(status);
     }
   }
@@ -534,8 +534,9 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     int NTFC = mResult->fomResult->non_trivial_FOM_count;
     
     ValgrindResult* valgrindResult = genValgrindResult(cwd, original_file_Name_dir,str, makeDir,user_config);
+    
     if(valgrindResult!=NULL){
-      valgrindResult->valgrind_error_count=valgrindResult->valgrind_error_count>PUTValgrindErrors?valgrindResult->valgrind_error_count-PUTValgrindErrors:0;
+      //valgrindResult->valgrind_error_count=valgrindResult->valgrind_error_count>PUTValgrindErrors?valgrindResult->valgrind_error_count-PUTValgrindErrors:0;
       mResult->fomResult->total_valgrind_errors+=valgrindResult->valgrind_error_count;
       printValgrindResult(mutation_code,valgrindResult);
     }

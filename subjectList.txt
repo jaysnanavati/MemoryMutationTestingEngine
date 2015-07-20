@@ -1,4 +1,3 @@
-../PUTs/01pwp
 ../PUTs/02CRaft-master
 ../PUTs/03farraylist-master
 ../PUTs/04CHashMapViaLinkedList
