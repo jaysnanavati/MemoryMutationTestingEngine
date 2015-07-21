@@ -20,6 +20,8 @@
 #include "valgrindEval.h"
 #include "gstats.h"
 
+#define TXL_OPTS 2
+
 typedef struct {
   char *sourceRootDir;
   char **source;
@@ -536,7 +538,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     ValgrindResult* valgrindResult = genValgrindResult(cwd, original_file_Name_dir,str, makeDir,user_config);
     
     if(valgrindResult!=NULL){
-      //valgrindResult->valgrind_error_count=valgrindResult->valgrind_error_count>PUTValgrindErrors?valgrindResult->valgrind_error_count-PUTValgrindErrors:0;
+      valgrindResult->valgrind_error_count=valgrindResult->valgrind_error_count>PUTValgrindErrors?valgrindResult->valgrind_error_count-PUTValgrindErrors:0;
       mResult->fomResult->total_valgrind_errors+=valgrindResult->valgrind_error_count;
       printValgrindResult(mutation_code,valgrindResult);
     }
@@ -948,23 +950,23 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   fclose(temp_results);
   
   //Extract dir from target
-  char *chptr = strrchr(args_txl[4], '/');
-  long dif = chptr - args_txl[4];
+  char *chptr = strrchr(args_txl[4+TXL_OPTS], '/');
+  long dif = chptr - args_txl[4+TXL_OPTS];
   
   //Extract file name in order to rename mutants
-  char *original_file_Name =strndup(chptr+1,strlen(args_txl[4])-dif);
-  char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4])-(dif+3));
-  char *makeDir =strndup(args_txl[4],dif);
+  char *original_file_Name =strndup(chptr+1,strlen(args_txl[4+TXL_OPTS])-dif);
+  char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4+TXL_OPTS])-(dif+3));
+  char *makeDir =strndup(args_txl[4+TXL_OPTS],dif);
   
   char * args3 = malloc(snprintf(NULL, 0, "%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c") + 1);
   sprintf(args3,"%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c");
-  args_txl[3]=args3;
+  args_txl[3+TXL_OPTS]=args3;
   
   //Create the folder that stores the mutations
   char m_dir[strlen(cwd)+strlen("mutation_out")+strlen(original_file_Name_dir)+3];
   sprintf(m_dir,"%s/mutation_out/%s",cwd,original_file_Name_dir);
   mkdir(m_dir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  args_txl[7]=m_dir;
+  args_txl[7+TXL_OPTS]=m_dir;
   
   printf("\n");
   
@@ -983,7 +985,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   close(make_logs);
   
   printf("\n--> Successfully generated mutations (FOMs) for: %s in mutation_out/%s, now performing injections <---\n\n",*source,original_file_Name_dir);
-  MResult* mResult = inject_mutations(mut_out_dir,args_txl[4],makeDir,original_file_Name,user_config,args3,original_file_Name_dir,cwd);
+  MResult* mResult = inject_mutations(mut_out_dir,args_txl[4+TXL_OPTS],makeDir,original_file_Name,user_config,args3,original_file_Name_dir,cwd);
   
   char *mut_out_dir_hom = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir, "HOM") + 1);
   sprintf(mut_out_dir_hom,"%s/%s", mut_out_dir, "HOM");
@@ -993,7 +995,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
     //Generate HOMs from FOMs
     //generateSubsumingHOMs(mut_out_dir_hom,args_txl[4],copy_put,user_config,args3,mResult);
     //Re-inject the original source file into the project
-    copy_file(mResult->fomResult->original_source_file, args_txl[4]);
+    copy_file(mResult->fomResult->original_source_file, args_txl[4+TXL_OPTS]);
     
     double average_damage = calculate_average_damage(mResult->fomResult);
     
@@ -1098,7 +1100,7 @@ void process_source_directory(char *dir,char *cwd,char*copy_put,char**args_txl,c
       if (dot && !strcmp(dot, ".c")){
 	char *file = malloc(snprintf(NULL, 0, "%s/%s", dir,entry->d_name ) + 1);
 	sprintf(file, "%s/%s",dir,entry->d_name);
-	args_txl[4]=file;
+	args_txl[4+TXL_OPTS]=file;
 	process_source_file(file,cwd,copy_put,args_txl,source,user_config);
 	free(file);
       }
@@ -1219,13 +1221,15 @@ int main(int argc, char**argv) {
     }
     
     //Initialize txl arguments in order to perform mutations on each source file
-    char**args_txl =  malloc(9 * sizeof(char*));;
+    char**args_txl =  malloc((9+TXL_OPTS) * sizeof(char*));;
     args_txl[0]="txl";
     args_txl[1]="mutator.Txl";
-    args_txl[2]="-o";
-    args_txl[5]="-";
-    args_txl[6]="-mut_out";
-    args_txl[8]=NULL;        
+    args_txl[2]="-size";
+    args_txl[3]="2048";
+    args_txl[2+TXL_OPTS]="-o";
+    args_txl[5+TXL_OPTS]="-";
+    args_txl[6+TXL_OPTS]="-mut_out";
+    args_txl[8+TXL_OPTS]=NULL;        
     
     //mutator.txl path
     args_txl[1]=malloc(snprintf(NULL, 0, "%s/mutator.Txl",cwd) + 1);
@@ -1265,7 +1269,7 @@ int main(int argc, char**argv) {
 	else if( s.st_mode & S_IFREG )
 	{
 	  //it's a file
-	  args_txl[4]=path;
+	  args_txl[4+TXL_OPTS]=path;
 	  process_source_file(path,cwd,copy_put,args_txl,source,user_config);
 	}
       }

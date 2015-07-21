@@ -64,14 +64,13 @@ function driver
 		  [mutateAlloca 8]
 		  [mutateRealloc 10]
 		  [mutateMalloc 13]
-		  %[mutateDynamicAllocation 27]
 		  [mutateSizeof 15]
-		  %[mutateVLA 30]
-		  [mutateAOR 20]
-		  [mutateLCR 22]
-		  [mutateROR 28]
-		  [mutateUOI 32]
-		  [mutateABS 36]
+		  %[mutateAOR 20]
+		  %[mutateLCR 22]
+		  %[mutateROR 28]
+		  %[mutateUOI 32]
+		  %[mutateABS 36]
+		  %[mutateRORTest 5]
 	
 end function
 
@@ -398,6 +397,64 @@ rule mutateABS defValMax [number]
 		  [replace_multiplicative_expresion_with_nabs 36]
 		  [generateMutant "ABS_3" 36]
 		  [prepareNextMutationOP 36]
+		  
+end rule
+
+rule mutateABSTest defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_additive_expresion_with_abs 0]
+		  [generateMutant "ABS_0" 0]
+		  [prepareNextMutationOP 0]
+		  
+		  [replace_additive_expresion_with_nabs 1]
+		  [generateMutant "ABS_1" 1]
+		  [prepareNextMutationOP 1]
+		  
+		  [replace_multiplicative_expresion_with_abs 2]
+		  [generateMutant "ABS_2" 2]
+		  [prepareNextMutationOP 2]
+		  
+		  [replace_multiplicative_expresion_with_nabs 3]
+		  [generateMutant "ABS_3" 3]
+		  [prepareNextMutationOP 3]
+		  
+end rule
+
+rule mutateRORTest defValMax [number]
+	import callVal [number]
+	replace $[program]
+		P [program]
+	where callVal[<=defValMax]
+	by
+		P 
+		  [replace_relational_with_equal 0]
+		  [generateMutant "ROR_0" 0]
+		  [prepareNextMutationOP 0]
+		  
+		  [replace_relational_with_inequal 1]
+		  [generateMutant "ROR_1" 1]
+		  [prepareNextMutationOP 1]
+		  
+		  [replace_relational_with_lt 2]
+		  [generateMutant "ROR_2" 2]
+		  [prepareNextMutationOP 2]
+		  
+		  [replace_relational_with_le 3]
+		  [generateMutant "ROR_3" 3]
+		  [prepareNextMutationOP 3]
+		  
+		  [replace_relational_with_gt 4]
+		  [generateMutant "ROR_4" 4]
+		  [prepareNextMutationOP 4]
+		  
+		  [replace_relational_with_ge 5]
+		  [generateMutant "ROR_5" 5]
+		  [prepareNextMutationOP 5]
 		  
 end rule
 
