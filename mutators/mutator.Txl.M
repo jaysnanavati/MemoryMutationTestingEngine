@@ -46,7 +46,7 @@ function main
 	export skip [number] 0
 	export globalPassCounter [number] 0
 	export localPassCounter [number] 0
-	export callVal [number] 29
+	export callVal [number] 0
 	deconstruct * TXLargs
 		"-mut_out" Value [stringlit] MoreOptions [repeat stringlit]
 	export mut_folder [stringlit] Value
@@ -65,10 +65,10 @@ function driver
 		  [mutateRealloc 10]
 		  [mutateMalloc 13]
 		  [mutateSizeof 15]
-		  [mutateAOR 20]
-		  [mutateLCR 22]
-		  [mutateROR 28]
-		  [mutateUOI 32]
+		  %[mutateAOR 20]
+		  %[mutateLCR 22]
+		  %[mutateROR 28]
+		  %[mutateUOI 32]
 		  %[mutateABS 36]
 		  %[mutateRORTest 5]
 	

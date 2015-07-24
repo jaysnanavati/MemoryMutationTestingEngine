@@ -941,6 +941,12 @@ double calculate_average_damage(FOMResult * fomResult){
   return average_damage==0.0?0:average_damage/(double)(fomResult->total_mutants-fomResult->failed_injection);
 }
 
+void filterMutants(char *cwd){
+	char*args_filter=(char*)malloc(200*sizeof(char));
+	sprintf(args_filter,"%s/avoidDeadMutants.sh", cwd);
+    system(args_filter);   
+}
+
 
 void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**source,Config *user_config){
   remove(mutation_results_path);
@@ -973,6 +979,7 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   startprogram(args_txl,NULL,0);
   
   printf("\n*-------------------------------------------------------------------------*\n* Mutating %s \n*-------------------------------------------------------------------------*\n\n",*source);
+  filterMutants(cwd);
   
   char *mut_out_dir = malloc(snprintf(NULL, 0, "%s/%s/%s", cwd,"mutation_out", original_file_Name_dir) + 1);
   sprintf(mut_out_dir,"%s/%s/%s", cwd,"mutation_out", original_file_Name_dir);
