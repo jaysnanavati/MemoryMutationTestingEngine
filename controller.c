@@ -359,7 +359,8 @@ void extractCFGBranches(char*srcDir,char*outputDir,char*filename){
 //stats[1] = number of tests that the  mutant failed
 //stats[2] = total number of tests in the test suite
 int* get_non_trivial_FOM_stats(){
-  int *stats = calloc(sizeof(int),20);
+  int lstats = 20;
+  int *stats = calloc(sizeof(int), lstats);
   char killed_test_id[128];
   temp_results=fopen(temp_results_path,"r");
   fscanf (temp_results, "%d %d %d %s", stats, stats+1, stats+2,killed_test_id);
@@ -370,8 +371,8 @@ int* get_non_trivial_FOM_stats(){
   char *pt=NULL;
   pt = strtok (killed_test_id,",");
   while (pt != NULL) {
-    if(counter>20){
-      stats = realloc(stats,(counter*=2)*sizeof(int*));
+    if(counter>=lstats){
+      stats = realloc(stats,(lstats*=2)*sizeof(int));
     }
     stats[counter++]= atoi(pt);
     pt = strtok (NULL, ",");
@@ -447,11 +448,9 @@ ValgrindResult * genValgrindResult(char *cwd, char*original_file_Name_dir,char*s
     return valgrindResult;
 }
 
-void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config *user_config,MResult*mResult,int non_trivial_FOM_buffer,char*txl_original,char *original_file_Name_dir,char*cwd){
+void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config *user_config,MResult*mResult,int *non_trivial_FOM_buffer,int *survived_buffer,char*txl_original,char *original_file_Name_dir,char*cwd){
   
   char**args_diff;
-  Mutant *non_trivial_FOMS_ptr = mResult->fomResult->non_trivial_FOMS;
-  Mutant *survived_ptr = mResult->fomResult->survived;
   //Run make on the mutated project in order to build it
   printf("--> Evaluating FOM: %s\n",str);
   
@@ -529,8 +528,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     mResult->fomResult->mutant_kill_count++;
     
-    if(stats[0] >non_trivial_FOM_buffer){
-      mResult->fomResult->non_trivial_FOMS = realloc(mResult->fomResult->non_trivial_FOMS,(non_trivial_FOM_buffer*=2)*sizeof(Mutant));
+    if(stats[0] > *non_trivial_FOM_buffer){
+      mResult->fomResult->non_trivial_FOMS = realloc(mResult->fomResult->non_trivial_FOMS,((*non_trivial_FOM_buffer) *= 2)*sizeof(Mutant));
     }
     
     int NTFC = mResult->fomResult->non_trivial_FOM_count;
@@ -548,20 +547,21 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       
       //Update gstats to record mutant was a  non_trivial_mutant
       
-      non_trivial_FOMS_ptr[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
-      non_trivial_FOMS_ptr[NTFC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
-      strncpy(non_trivial_FOMS_ptr[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
-      strncpy(non_trivial_FOMS_ptr[NTFC].mutation_code,mutation_code,strlen(mutation_code));
+      mResult->fomResult->non_trivial_FOMS[NTFC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
+      mResult->fomResult->non_trivial_FOMS[NTFC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
+      strncpy(mResult->fomResult->non_trivial_FOMS[NTFC].mutant_source_file,filename_qfd,strlen(filename_qfd));
+      strncpy(mResult->fomResult->non_trivial_FOMS[NTFC].mutation_code,mutation_code,strlen(mutation_code));
       
-      non_trivial_FOMS_ptr[NTFC].fragility=((double)stats[1]/(double)stats[2]);
-      non_trivial_FOMS_ptr[NTFC].cfgDeviation=cfgDeviation;
-      non_trivial_FOMS_ptr[NTFC].damage=(((1-non_trivial_FOMS_ptr[NTFC].fragility)/3.0)+(non_trivial_FOMS_ptr[NTFC].cfgDeviation/3.0));
+      mResult->fomResult->non_trivial_FOMS[NTFC].fragility=((double)stats[1]/(double)stats[2]);
+      mResult->fomResult->non_trivial_FOMS[NTFC].cfgDeviation=cfgDeviation;
+      //mResult->fomResult->non_trivial_FOMS[NTFC].damage=(((1-mResult->fomResult->non_trivial_FOMS[NTFC].fragility)/3.0)+(mResult->fomResult->non_trivial_FOMS[NTFC].cfgDeviation/3.0));
+	  mResult->fomResult->non_trivial_FOMS[NTFC].damage=1;
       
-      non_trivial_FOMS_ptr[NTFC].killed_by_tests = calloc(sizeof(int),stats[1]);
-      non_trivial_FOMS_ptr[NTFC].killed_by_tests_count=stats[1];
-      memcpy(non_trivial_FOMS_ptr[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
+      mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests = calloc(sizeof(int),stats[1]);
+      mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests_count=stats[1];
+      memcpy(mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
      
-      non_trivial_FOMS_ptr[NTFC].valgrindResult = valgrindResult;
+      mResult->fomResult->non_trivial_FOMS[NTFC].valgrindResult = valgrindResult;
       mResult->fomResult->non_trivial_FOM_count++;
     }else if(stats[1]>0 && stats[1]==stats[2]){
       mResult->fomResult->dumb_mutants++;
@@ -596,8 +596,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     }
     
     int SMC = mResult->fomResult->survived_count;
-    if(SMC>non_trivial_FOM_buffer){
-      mResult->fomResult->survived = realloc(mResult->fomResult->survived,(non_trivial_FOM_buffer*=2)*sizeof(Mutant));
+    if(SMC > *survived_buffer){
+      mResult->fomResult->survived = realloc(mResult->fomResult->survived,((*survived_buffer) *= 2)*sizeof(Mutant));
     }
     
     //GEt valgrind results
@@ -630,14 +630,14 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     }
     
     //Store results in the Mutant
-    survived_ptr[SMC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
-    survived_ptr[SMC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
-    strncpy(survived_ptr[SMC].mutant_source_file,filename_qfd,strlen(filename_qfd));
-    strncpy(survived_ptr[SMC].mutation_code,mutation_code,strlen(mutation_code));
+    mResult->fomResult->survived[SMC].mutant_source_file = calloc(sizeof(char),strlen(filename_qfd)+1);
+    mResult->fomResult->survived[SMC].mutation_code = calloc(sizeof(char),strlen(mutation_code)+1);
+    strncpy(mResult->fomResult->survived[SMC].mutant_source_file,filename_qfd,strlen(filename_qfd));
+    strncpy(mResult->fomResult->survived[SMC].mutation_code,mutation_code,strlen(mutation_code));
     
-    survived_ptr[SMC].valgrindResult=valgrindResult;
-    survived_ptr[SMC].cfgDeviation=cfgDeviation;
-    survived_ptr[SMC].damage=((2/3.0)+(survived_ptr[SMC].cfgDeviation/3.0));
+    mResult->fomResult->survived[SMC].valgrindResult=valgrindResult;
+    mResult->fomResult->survived[SMC].cfgDeviation=cfgDeviation;
+    mResult->fomResult->survived[SMC].damage=((2/3.0)+(mResult->fomResult->survived[SMC].cfgDeviation/3.0));
     mResult->fomResult->survived_count++;
   }
   mResult->fomResult->original_source_file=mv_dir;   
@@ -665,6 +665,7 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
 MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_file_Name,Config *user_config,char* txl_original,char*original_file_Name_dir,char*cwd){
   
   int non_trivial_FOM_buffer = 200;
+  int survived_buffer = 200;
   
   MResult *mResult = malloc(sizeof(MResult));
   mResult->fomResult= malloc(sizeof(FOMResult));
@@ -677,7 +678,7 @@ MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_f
   mResult->fomResult->non_trivial_FOM_count=0;
   mResult->fomResult->survived=0;
   mResult->fomResult->non_trivial_FOMS = malloc(non_trivial_FOM_buffer*sizeof(Mutant));
-  mResult->fomResult->survived=malloc(non_trivial_FOM_buffer*sizeof(Mutant));
+  mResult->fomResult->survived=malloc(survived_buffer*sizeof(Mutant));
   mResult->fomResult->killed_by_valgrind=0;
   mResult->fomResult->caused_CFG_deviation=0;
   mResult->fomResult->survived_count=0;
@@ -749,7 +750,7 @@ MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_f
 	strcpy(str, dp->d_name);
 	copy_file(filename_qfd, target);
 	
-	genResultsFOM(str,makeDir,filename_qfd,mv_dir,user_config,mResult,non_trivial_FOM_buffer,txl_original,original_file_Name_dir,cwd);
+	genResultsFOM(str,makeDir,filename_qfd,mv_dir,user_config,mResult,&non_trivial_FOM_buffer,&survived_buffer,txl_original,original_file_Name_dir,cwd);
 	free(str);
       }
     }
