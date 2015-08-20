@@ -560,6 +560,11 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
       mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests = calloc(sizeof(int),stats[1]);
       mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests_count=stats[1];
       memcpy(mResult->fomResult->non_trivial_FOMS[NTFC].killed_by_tests,stats+3,stats[1]*sizeof(int));
+      int indexOfNonTrivial;
+      for(indexOfNonTrivial=0; indexOfNonTrivial<stats[1]; indexOfNonTrivial++){
+      	printf("%d, ", stats[indexOfNonTrivial+3]);
+      }
+      printf("\n");
      
       mResult->fomResult->non_trivial_FOMS[NTFC].valgrindResult = valgrindResult;
       mResult->fomResult->non_trivial_FOM_count++;
