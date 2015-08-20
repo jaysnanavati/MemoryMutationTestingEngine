@@ -7,7 +7,7 @@ if [ $# -gt 0 ]; then
 		skip=0
 	fi
 else
-	postfix=NA
+	postfix=M
 	skip=0
 fi
 
