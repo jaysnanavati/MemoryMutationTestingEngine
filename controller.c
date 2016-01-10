@@ -144,7 +144,7 @@ int startprogram(char*programparams[],char* stdoutfd,int redirect){
     sleepTime.tv_nsec=SLEEP_UNIT_IN_MS*1000*1000;
     int waitStatus, i;
     for(i=0; i<WAIT_MAX_IN_MS/SLEEP_UNIT_IN_MS; i++){
-    	waitStatus=waitpid(pid, &status, WNOHANG);
+    	waitStatus=waitpid(id, &status, WNOHANG);
     	if( waitStatus!=0 ) {
     		break;
     	}
@@ -155,9 +155,9 @@ int startprogram(char*programparams[],char* stdoutfd,int redirect){
     }
     else if(waitStatus==0){
     	// timeout, kill the process
-    	kill(pid, SIGKILL);
+    	kill(id, SIGKILL);
     	printf("Timeout, killed child process.\n");
-    	waitpid(pid, &status, 0);
+    	waitpid(id, &status, 0);
     	return 2;
     }
     if(WIFEXITED(status)) {
