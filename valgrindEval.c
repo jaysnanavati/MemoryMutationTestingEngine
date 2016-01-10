@@ -120,7 +120,6 @@ void evaluate_error_nodes(ValgrindError*valgrindError,xmlDocPtr doc,int error_co
 ValgrindResult* valgrindXML_evaluate(char *xml_path,int testing_framework) {
   char *docname;
   xmlDocPtr doc;
-  printf("Entering func valgrindXML_evaluate()\n");
   xmlChar *xpath = (xmlChar*) "//errorcounts/pair/count";
   xmlNodeSetPtr nodeset;
   xmlXPathObjectPtr result;
@@ -129,7 +128,6 @@ ValgrindResult* valgrindXML_evaluate(char *xml_path,int testing_framework) {
   doc = getdoc(docname);
   result = getnodeset (doc, xpath);
   
-  printf("check point 1\n");
   ValgrindResult *valgrindResult=NULL;
   //Get all the errors first
   if (result) {
@@ -147,7 +145,6 @@ ValgrindResult* valgrindXML_evaluate(char *xml_path,int testing_framework) {
     valgrindResult->unique_valgrind_error_count=nodeset->nodeNr;
     valgrindResult->valgrindErrors = malloc(nodeset->nodeNr*sizeof(ValgrindError));
     
-  printf("check point 2\n");
     for (i=0; i < nodeset->nodeNr; i++) {
       //Get <count></count>
       xmlNodePtr countNode = nodeset->nodeTab[i];
@@ -172,6 +169,5 @@ ValgrindResult* valgrindXML_evaluate(char *xml_path,int testing_framework) {
   xmlFreeDoc(doc);
   xmlCleanupParser();
   
-  printf("Exiting func valgrindXML_evaluate()\n");
   return valgrindResult;
 }
