@@ -10,5 +10,7 @@ if [[ -z "$file_only" ]]; then
  done;
 else
  arr=( $(find $source_dir -name $file_only.c.gcov))
- grep -E $GREP_STR ${arr[0]} >  $output_dir/$(basename ${arr[0]}).branches
+ if [[ ! -z ${arr[0]} ]]; then
+ 	grep -E $GREP_STR ${arr[0]} >  $output_dir/$(basename ${arr[0]}).branches
+ fi
 fi

@@ -15,8 +15,11 @@ double calculateCFGBranchDeviation(char*source1, char*source2){
   size_t len_f2 = 0;
   ssize_t read_f2;
   
-  if (f1 == NULL || f2==NULL){
-    exit(EXIT_FAILURE);
+  if (f1 == NULL){
+    return -1;
+  }
+  if (f2==NULL){
+    return -2;
   }
   
   int deviated_branches=0;

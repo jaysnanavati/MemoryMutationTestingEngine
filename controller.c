@@ -135,7 +135,6 @@ int startprogram(char*programparams[],char* stdoutfd,int redirect){
     }
     execvp (programparams[0], programparams);
   }else{
-    int status;
     struct timespec sleepTime;
     struct timespec remainingTime;
     const int SLEEP_UNIT_IN_MS=100;
@@ -529,17 +528,25 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     
     //calculate the deviation
     cfgDeviation =calculateCFGBranchDeviation(cfg_original_file,cfg_out_file);
-    if(cfgDeviation>0){
-      create_update_gstat_mutation(mutation_code,"cfg_deviation_raw",get_gstat_value_mutation(mutation_code,"cfg_deviation_raw")+(cfgDeviation*100));
-      mResult->fomResult->caused_CFG_deviation++;
+    if(cfgDeviation<0){
+    	mResult->fomResult->mutant_kill_count++;
+		mResult->fomResult->failed_injection++;
+		//Update gstats to record mutant did not execute
+		create_update_gstat_mutation(mutation_code,"failed_injection",get_gstat_value_mutation(mutation_code,"failed_injection")+1);
     }
-     
-    mutation_results = fopen(mutation_results_path,"a+");
-    fprintf(mutation_results, "CFG Deviation : %.2f%%\n",cfgDeviation*100.00);
-    fflush(mutation_results);
-    fclose(mutation_results);
-    free(cfg_original_file);
-    free(cfg_out_file);
+    else{
+		if(cfgDeviation>0){
+		  create_update_gstat_mutation(mutation_code,"cfg_deviation_raw",get_gstat_value_mutation(mutation_code,"cfg_deviation_raw")+(cfgDeviation*100));
+		  mResult->fomResult->caused_CFG_deviation++;
+		}
+		 
+		mutation_results = fopen(mutation_results_path,"a+");
+		fprintf(mutation_results, "CFG Deviation : %.2f%%\n",cfgDeviation*100.00);
+		fflush(mutation_results);
+		fclose(mutation_results);
+		free(cfg_original_file);
+		free(cfg_out_file);
+	}
   }
   
   //Get mutants killed by tests after evaluation
