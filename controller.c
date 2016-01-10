@@ -156,7 +156,7 @@ int startprogram(char*programparams[],char* stdoutfd,int redirect){
     else if(waitStatus==0){
     	// timeout, kill the process
     	kill(id, SIGKILL);
-    	printf("Timeout, killed child process.\n");
+    	printf("Timeout, killed child process %s.\n", programparams[0]);
     	waitpid(id, &status, 0);
     	return 2;
     }
