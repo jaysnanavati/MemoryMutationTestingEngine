@@ -325,7 +325,7 @@ int startMake(char**args,char*currentMutation){
     else if(waitStatus==0){
     	// timeout, kill the process
     	kill(pid, SIGKILL);
-    	printf("Timeout, killed child process.\n");
+    	printf("Timeout, killed make process.\n");
     	waitpid(pid, &status, 0);
     	return 2;
     }
@@ -460,9 +460,9 @@ ValgrindResult * genValgrindResult(char *cwd, char*original_file_Name_dir,char*s
     
     //Make sure we do not get duplicate output when lanching valgrind
     setenv("IS_MUTATE","false",1);
-    printf("before startprogram.\n");
+    
     startprogram(args_valgrind,NULL,1);
-    printf("after startprogram.\n");
+    
     //set it back so this process gets the right output
     setenv("IS_MUTATE","true",1);
     
