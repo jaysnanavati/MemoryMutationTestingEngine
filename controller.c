@@ -329,7 +329,7 @@ int startMake(char**args,char*currentMutation){
     	return 2;
     }
     if(WIFEXITED(status)) {
-      //printf("make returns %d.\n", WEXITSTATUS(status));
+      printf("make returns %d.\n", WEXITSTATUS(status));
       return WEXITSTATUS(status);
     }
   }
@@ -531,7 +531,6 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     if(cfgDeviation<0){
     	mResult->fomResult->mutant_kill_count++;
 		mResult->fomResult->failed_injection++;
-		//Update gstats to record mutant did not execute
 		create_update_gstat_mutation(mutation_code,"failed_injection",get_gstat_value_mutation(mutation_code,"failed_injection")+1);
     }
     else{
@@ -999,7 +998,8 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   //Extract file name in order to rename mutants
   char *original_file_Name =strndup(chptr+1,strlen(args_txl[4+TXL_OPTS])-dif);
   char *original_file_Name_dir =strndup(chptr+1,strlen(args_txl[4+TXL_OPTS])-(dif+3));
-  char *makeDir =strndup(args_txl[4+TXL_OPTS],dif);
+  char *makeDir = malloc(snprintf(NULL, 0, "%s/%s", cwd, copy_put) + 1);
+  sprintf(makeDir, "%s/%s", cwd, copy_put);
   
   char * args3 = malloc(snprintf(NULL, 0, "%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c") + 1);
   sprintf(args3,"%s/%s/%s/%s", cwd,"mutation_out", original_file_Name_dir,"txl_original.c");
