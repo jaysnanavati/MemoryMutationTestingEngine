@@ -1034,12 +1034,13 @@ void process_source_file(char*s,char * cwd,char*copy_put,char**args_txl,char**so
   char *mut_out_dir_hom = malloc(snprintf(NULL, 0, "%s/%s", mut_out_dir, "HOM") + 1);
   sprintf(mut_out_dir_hom,"%s/%s", mut_out_dir, "HOM");
   
+  //Re-inject the original source file into the project
+  copy_file(mResult->fomResult->original_source_file, args_txl[4+TXL_OPTS]);
   
   if(mResult->fomResult->total_mutants>0){
     //Generate HOMs from FOMs
     //generateSubsumingHOMs(mut_out_dir_hom,args_txl[4],copy_put,user_config,args3,mResult);
     //Re-inject the original source file into the project
-    copy_file(mResult->fomResult->original_source_file, args_txl[4+TXL_OPTS]);
     
     double average_damage = calculate_average_damage(mResult->fomResult);
     
