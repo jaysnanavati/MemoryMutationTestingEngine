@@ -332,7 +332,6 @@ int startMake(char**args,char*currentMutation){
     	return 2;
     }
     if(WIFEXITED(status)) {
-      printf("make returns %d.\n", WEXITSTATUS(status));
       return WEXITSTATUS(status);
     }
   }
@@ -535,6 +534,8 @@ void genResultsFOM(char *str,char* makeDir,char* filename_qfd,char*mv_dir,Config
     	mResult->fomResult->mutant_kill_count++;
 		mResult->fomResult->failed_injection++;
 		create_update_gstat_mutation(mutation_code,"failed_injection",get_gstat_value_mutation(mutation_code,"failed_injection")+1);
+		printf("cfgDeviation is less than 0 due to missing branch file(s)\n");
+		exit(0);
     }
     else{
 		if(cfgDeviation>0){

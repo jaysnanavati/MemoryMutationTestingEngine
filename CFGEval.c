@@ -48,6 +48,7 @@ double calculateCFGBranchDeviation(char*source1, char*source2){
       }
       total_branches++;
     }
+    else printf("Warning: branch numbers do not match.\n");
   }
   if (line_f1){
     free(line_f1);
