@@ -266,6 +266,9 @@ Config* processConfigFile(char* filePath){
       user_config->makeTestTarget=malloc(strlen(str)+1);
       user_config->makeTestTarget=strcpy(user_config->makeTestTarget,str);
     }
+    else{
+      user_config->makeTestTarget=NULL;
+    }
   }else{
     fprintf(stderr, "No 'testingFramework' setting in configuration file.\n");
     return(NULL);
@@ -384,7 +387,7 @@ void extractCFGBranches(char*srcDir,char*outputDir,char*filename){
 int* get_non_trivial_FOM_stats(){
   int lstats = 20;
   int *stats = calloc(sizeof(int), lstats);
-  char killed_test_id[128];
+  char killed_test_id[1024]={0};
   temp_results=fopen(temp_results_path,"r");
   fscanf (temp_results, "%d %d %d %s", stats, stats+1, stats+2,killed_test_id);
   fclose(temp_results);
