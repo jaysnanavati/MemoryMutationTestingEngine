@@ -11,7 +11,7 @@ else
 	skip=0
 fi
 
-cp mutators/mutator.Txl.#postfix mutator.Txl
+cp mutators/mutator.Txl.$postfix mutator.Txl
 
 while read line; do
 	if [ $skip -gt 0 ]; then
