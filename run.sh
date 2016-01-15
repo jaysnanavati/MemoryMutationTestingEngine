@@ -11,12 +11,16 @@ else
 	skip=0
 fi
 
+cp mutators/mutator.Txl.#postfix mutator.Txl
+
 while read line; do
 	if [ $skip -gt 0 ]; then
 		((skip=skip-1))
 		continue
 	fi
 	echo $line
+	subName=`basename $line`
+	echo $subName
 	if [ -d mutation_out ]; then
 		rm -rf mutation_out
 	fi
@@ -24,12 +28,15 @@ while read line; do
 		rm -f gstats.xml
 	fi
 	./Controller $line/config.cfg
-	if [ -d $line/mutation_out_$postfix ]; then
-		rm -rf $line/mutation_out_$postfix
+	if [ ! -d PUTs/$subName ]; then
+		mkdir PUTs/$subName
 	fi
-	if [ -f $line/gstats_$postfix.xml ]; then
-		rm -f $line/gstats_$postfix.xml
+	if [ -d PUTs/$subName/mutation_out_$postfix ]; then
+		rm -rf PUTs/$subName/mutation_out_$postfix
 	fi
-	cp -r mutation_out $line/mutation_out_$postfix
-	cp gstats.xml $line/gstats_$postfix.xml
+	if [ -f PUTs/$subName/gstats_$postfix.xml ]; then
+		rm -f PUTs/$subName/gstats_$postfix.xml
+	fi
+	cp -r mutation_out PUTs/$subName/mutation_out_$postfix
+	cp gstats.xml PUTs/$subName/gstats_$postfix.xml
 done < subjectList.txt

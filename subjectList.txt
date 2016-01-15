@@ -1,16 +1,1 @@
-/home/localadmin/programs/PUTs/01pwp
-/home/localadmin/programs/PUTs/02CRaft-master
-/home/localadmin/programs/PUTs/03farraylist-master
-/home/localadmin/programs/PUTs/04CHashMapViaLinkedList
-/home/localadmin/programs/PUTs/05array-avl-tree-master
-/home/localadmin/programs/PUTs/06pseudolru-master
-/home/localadmin/programs/PUTs/07quadratic-probing-hashmap
-/home/localadmin/programs/PUTs/08texture-atlas
-/home/localadmin/programs/PUTs/09splay-tree-master
-/home/localadmin/programs/PUTs/10streaming-bencode-master
-/home/localadmin/programs/PUTs/11CSparseCounter
-/home/localadmin/programs/PUTs/12heap-master
-/home/localadmin/programs/PUTs/13cbuffer-master
-/home/localadmin/programs/PUTs/14CLinkedListQueue
-/home/localadmin/programs/PUTs/15bipbuffer-master
-/home/localadmin/programs/PUTs/16CBitfield
+/home/localadmin/programs/PUTs/libdssl
