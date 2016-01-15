@@ -749,7 +749,7 @@ MResult* inject_mutations(char* srcDir,char*target,char*makeDir,char* original_f
   char *mv_dir = malloc(snprintf(NULL, 0, "%s.original", tmp) + 1);
   sprintf(mv_dir, "%s.original",tmp);
   
-  int ret = rename(target, mv_dir);
+  int ret = copy_file(target, mv_dir);
   if(ret != 0)
   {
     fprintf(stderr, "Can't move %s\n", target);
