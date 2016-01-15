@@ -25,7 +25,7 @@ double calculateCFGBranchDeviation(char*source1, char*source2){
     int deviated_branches=0;
     int total_branches=0;
 
-    while (true) {
+    while (1) {
 	read_f1 = getline(&line_f1, &len_f1, f1);
 	read_f2 = getline(&line_f2, &len_f2, f2);
 	if(read_f1==-1 || read_f2==-1){
