@@ -27,7 +27,14 @@ while read line; do
 	if [ -f gstats.xml ]; then
 		rm -f gstats.xml
 	fi
-	./Controller $line/config.cfg
+	rm -rf mutation_out_single
+	mkdir mutation_out_single
+	for single in `ls $line`; do
+		if [[ $single == config.single*.cfg ]]; then
+			valgrind ./Controller $line/$single
+			cp -r mutation_out/* mutation_out_single/
+		fi
+	done
 	if [ ! -d PUTs/$subName ]; then
 		mkdir PUTs/$subName
 	fi
@@ -37,6 +44,6 @@ while read line; do
 	if [ -f PUTs/$subName/gstats_$postfix.xml ]; then
 		rm -f PUTs/$subName/gstats_$postfix.xml
 	fi
-	cp -r mutation_out PUTs/$subName/mutation_out_$postfix
+	cp -r mutation_out_single PUTs/$subName/mutation_out_$postfix
 	cp gstats.xml PUTs/$subName/gstats_$postfix.xml
 done < subjectList.txt

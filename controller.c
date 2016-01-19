@@ -138,7 +138,7 @@ int startprogram(char*programparams[],char* stdoutfd,int redirect){
 		struct timespec sleepTime;
 		struct timespec remainingTime;
 		const int SLEEP_UNIT_IN_MS=100;
-		const int WAIT_MAX_IN_MS=20*1000;
+		const int WAIT_MAX_IN_MS=200*1000;
 		sleepTime.tv_sec=0;
 		sleepTime.tv_nsec=SLEEP_UNIT_IN_MS*1000*1000;
 		int waitStatus, i;
@@ -174,6 +174,8 @@ void cleanUp(char*copyPUTDir){
 	strcpy(args_del[2],copyPUTDir);
 	args_del[3]=NULL;
 	startprogram(args_del,NULL,0);
+	free(args_del[2]);
+	free(args_del);
 }
 
 Config* processConfigFile(char* filePath){
@@ -294,16 +296,20 @@ int startMake(char**args,char*currentMutation){
 	if(pid==0){
 		//Disable runtime protection provided by glibc in order to ensure mutants are injected and run 
 		putenv("MALLOC_CHECK_=0");
-		make_logs=open(make_logs_dir, O_RDWR | O_APPEND);
+		//make_logs=open(make_logs_dir, O_RDWR | O_APPEND);
 		if(currentMutation!=NULL){
+			make_logs=open(make_logs_dir, O_RDWR | O_APPEND);
 			char *title="--> MUTATION ::";
 			char *mut_txt = malloc(snprintf(NULL, 0, "\n%s %s\n\n", title,currentMutation ) + 1);
 			sprintf(mut_txt, "\n%s %s\n\n",title , currentMutation);
 			write(make_logs,mut_txt,strlen(mut_txt));
+			dup2(make_logs, 1);
+			dup2(make_logs, 2);
+			close(make_logs);
 		}
-		dup2(make_logs, 1);
-		dup2(make_logs, 2);
-		close(make_logs);
+		//dup2(make_logs, 1);
+		//dup2(make_logs, 2);
+		//close(make_logs);
 		execvp (args[0],args);
 	}else{
 		int status;
