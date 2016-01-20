@@ -2,7 +2,7 @@ This is a Mutation Testing engine for C language.
 
 To run this engine, you will need to download and install TXL: http://www.txl.ca/
 
-This tool requires CUnit Test for every subject to be mutated. (See examples in PUTs/)
+This tool requires the Programs Under Test using CuTest as their unit-testing library. (See examples in PUTs/)
 
 This repository comes with 16 example subjects, located in PUTs/
 
