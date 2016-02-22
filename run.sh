@@ -20,7 +20,6 @@ while read line; do
 	fi
 	echo $line
 	subName=`basename $line`
-	echo $subName
 	if [ -d mutation_out ]; then
 		rm -rf mutation_out
 	fi
@@ -33,6 +32,7 @@ while read line; do
 		if [[ $single == config.single*.cfg ]]; then
 			valgrind ./Controller $line/$single
 			cp -r mutation_out/* mutation_out_single/
+			cp gstats.xml gstats.tmp.xml
 		fi
 	done
 	if [ ! -d PUTs/$subName ]; then

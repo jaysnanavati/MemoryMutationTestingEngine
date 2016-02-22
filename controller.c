@@ -27,10 +27,11 @@ typedef struct {
 	char **source;
 	int  testingFramework;
 	char *CuTestLibSource;
+	int CuTestVersion;
 	char *CheckTestLibSource;
 	char *makeTestTarget;
 	char *executablePath;
-
+	char *executableArgs;
 	int numberOfSource;
 
 } Config;
@@ -213,6 +214,15 @@ Config* processConfigFile(char* filePath){
 		fprintf(stderr, "No 'executablePath' setting in configuration file.\n");
 		return(NULL);
 	}
+	
+	/* (optional) Get executable_args. */
+	if(config_lookup_string(&cfg, "executableArgs", &str)){
+		user_config->executableArgs=malloc(strlen(str)+1);
+		user_config->executableArgs=strcpy(user_config->executableArgs,str);
+	}
+	else{
+		user_config->executableArgs=NULL;
+	}
 
 	/* Get source locations*/
 	setting = config_lookup(&cfg, "source");
@@ -249,6 +259,12 @@ Config* processConfigFile(char* filePath){
 			}else{
 				fprintf(stderr, "No CuTest lib source found\n");
 				return(NULL);
+			}
+			
+			if(config_lookup_string(&cfg, "CuTestVersion", &str)){
+				user_config->CuTestVersion=atoi(str);
+			}else{
+				user_config->CuTestVersion=1;
 			}
 
 		}else if(strcmp(str,"libcheck")==0){
@@ -450,7 +466,7 @@ void printValgrindResult(char*mutation_code,ValgrindResult*valgrindResult){
 }
 
 ValgrindResult * genValgrindResult(char *cwd, char*original_file_Name_dir,char*str, char*makeDir,Config*user_config){
-	char **args_valgrind = calloc(sizeof(char*),8);
+	char **args_valgrind = calloc(sizeof(char*),9);
 	char* xml_file_location = malloc(snprintf(NULL, 0, "%s/mutation_out/%s/valgrind_eval_%s.xml",cwd,original_file_Name_dir, str) + 1);
 	sprintf(xml_file_location, "%s/mutation_out/%s/valgrind_eval_%s.xml",cwd,original_file_Name_dir, str);
 
@@ -463,7 +479,14 @@ ValgrindResult * genValgrindResult(char *cwd, char*original_file_Name_dir,char*s
 	sprintf(args_valgrind[5], "--xml-file=%s",xml_file_location);
 	args_valgrind[6]=malloc(snprintf(NULL, 0, "%s", user_config->executablePath) + 1);
 	sprintf(args_valgrind[6], "%s", user_config->executablePath);
-	args_valgrind[7]=NULL;
+	if(user_config->executableArgs!=NULL){
+		args_valgrind[7]=calloc(snprintf(NULL, 0, "%s", user_config->executableArgs) + 1, sizeof(char));
+		sprintf(args_valgrind[7], "%s", user_config->executableArgs);
+	}
+	else{
+		args_valgrind[7]=NULL;
+	}
+	args_valgrind[8]=NULL;
 
 	//Make sure we do not get duplicate output when lanching valgrind
 	setenv("IS_MUTATE","false",1);
@@ -1245,7 +1268,12 @@ int main(int argc, char**argv) {
 			//Replace the CuTest library in the project with our modified library
 			char * cutest_source = malloc(snprintf(NULL, 0, "%s/%s", copy_put,user_config->CuTestLibSource) + 1);
 			sprintf(cutest_source, "%s/%s",copy_put , user_config->CuTestLibSource);
-			copy_file("CuTest/CuTest.forked.c",cutest_source);
+			if(user_config->CuTestVersion==1){
+				copy_file("CuTest/CuTest.forked.c",cutest_source);
+			}
+			else{
+				copy_file("CuTest/CuTest.forked2.c",cutest_source);
+			}
 			free(cutest_source);
 		}else if(user_config->testingFramework==2 && user_config->CheckTestLibSource!=NULL){
 			//Replace the Check library in the project with our modified library
