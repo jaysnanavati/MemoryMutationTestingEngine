@@ -336,7 +336,7 @@ void CuSuiteRun(CuSuite* testSuite)
 		fclose(mutation_results);
 
 		//Convert killed_by_tests to string in order to write it to file
-		char buf[128], *pos = buf;
+		char buf[1024]={0}, *pos = buf;
 		int i;
 		for (i=0 ; i < testSuite->count &&  killed_by_tests[i]!=0 ; i++) {
 			if (i!=0) {
