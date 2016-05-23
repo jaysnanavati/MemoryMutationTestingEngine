@@ -1,8 +1,8 @@
-<h2>This is a Mutation Testing engine for C language<h2>
+<h2>This is a Mutation Testing engine for C language</h2>
 
 <b>Published:</b> http://www0.cs.ucl.ac.uk/staff/mharman/mutation2015.pdf, http://www.sciencedirect.com/science/article/pii/S0950584916300362
 
-<h2>Setup<h2>
+<h2>Setup</h2>
 
 To run this engine, you will need to download and install TXL: http://www.txl.ca/
 
